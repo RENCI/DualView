@@ -1,4 +1,5 @@
 var d3 = require("d3");
+var d3ScaleChromatic = require("d3-scale-chromatic");
 
 module.exports = function () {
       // Size
@@ -18,8 +19,10 @@ module.exports = function () {
       yScale = d3.scaleLinear()
           .domain([-1, 1]),
       radiusScale = d3.scaleLinear(),
-      strokeWidthScale = d3.scaleLinear()
-          .range([1, 2]),
+      colorScale = d3.scaleSequential(d3ScaleChromatic.interpolateRdBu),
+      strokeScale = d3.scaleLinear()
+          .domain([0.5, 1])
+          .range(["#eee", "#000"])
 
       // Parameters
       transitionDuration = 2000,
@@ -146,8 +149,6 @@ module.exports = function () {
       radiusScale
           .domain([0, d3.max(data, radiusMetric)])
           .range([rMin, rMin * 10]);
-
-      strokeWidthScale.domain([0, d3.max(data, strokeWidthMetric)]);
     }
 
     function drawPoints() {
@@ -180,7 +181,7 @@ module.exports = function () {
           .attr("data-placement", "auto top")
           .attr("cx", function(d) { return xScale(d.tsne[0])})
           .attr("cy", function(d) { return yScale(d.tsne[1])})
-          .style("stroke", "black")
+          .style("stroke-width", 2)
           .on("mouseover", function(d) {
             dispatcher.call("highlightObject", this, d);
           }).on("mouseout", function(d) {
@@ -194,9 +195,8 @@ module.exports = function () {
           })
           .attr("r", function(d) { return radiusScale(radiusMetric(d)); })
           .attr("data-original-title", function(d) { return d.id; })
-          .style("fill", function(d) { return "grey"; })
-          .style("stroke", function(d) { return strokeScale(d.connection); })
-          .style("stroke-width", function(d) { return strokeWidthScale(strokeWidthMetric(d)); })
+          .style("fill", fillColor)
+          .style("stroke", strokeColor)
           .on("click", function(d) {
             dispatcher.call("selectObject", this, d);
           })
@@ -236,8 +236,7 @@ module.exports = function () {
           .attr("r", function(d) { return radiusScale(radiusMetric(d)); })
           .attr("cx", function(d) { return xScale(d.tsneProgress[0])})
           .attr("cy", function(d) { return yScale(d.tsneProgress[1])})
-          .style("fill", function(d) { return "grey"; })
-          .style("stroke-width", function(d) { return strokeWidthScale(strokeWidthMetric(d)); });
+          .style("fill", function(d) { return "grey"; });
 
       // Exit
       point.exit().transition()
@@ -400,11 +399,15 @@ module.exports = function () {
       highlight.exit().remove();
     }
 
-    function radiusMetric(d) {
-      return 1;
+    function fillColor(d) {
+      return d.connection ? colorScale(1 - d.connection.mean) : "#ddd";
     }
 
-    function strokeWidthMetric(d) {
+    function strokeColor(d) {
+      return d.connection ? strokeScale(1 - d.connection.stdDev) : "#666";
+    }
+
+    function radiusMetric(d) {
       return 1;
     }
   }

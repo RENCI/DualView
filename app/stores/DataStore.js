@@ -10,6 +10,63 @@ var CHANGE_EVENT = "change";
 // The data
 var data = null;
 
+function normalize(v, min, max) {
+  return (v - min) / (max - min);
+}
+
+function highlightItem(item, array) {
+  array.forEach(function (item) {
+    item.highlight = false;
+  });
+
+  if (item) item.highlight = true;
+
+  updateConnections(item);
+}
+
+function selectItem(item, array) {
+  if (item) {
+    // Toggle selection
+    item.selected = !item.selected;
+  }
+  else {
+    // Clear all selections
+    array.forEach(function (item) {
+      item.selected = false;
+    });
+  }
+
+  updateConnections();
+}
+
+function updateConnections() {
+  var selectedDimensions = data.dimensions.filter(function (dimension) {
+    return dimension.selected;
+  });
+
+  if (selectedDimensions.length > 0) {
+    data.objects.forEach(function (object) {
+      var selectedValues = object.values.filter(function (value) {
+        return selectedDimensions.indexOf(value.dimension) !== -1;
+      }).map(function (value) {
+        return normalize(value.value, value.dimension.min, value.dimension.max);
+      });
+
+      object.connection = {
+        mean: simpleStatistics.mean(selectedValues),
+        stdDev: simpleStatistics.standardDeviation(selectedValues)
+      };
+
+      console.log(object.connection.stdDev);
+    });
+  }
+  else {
+    data.objects.forEach(function (object) {
+      object.connection = null;
+    });
+  }
+}
+
 function processData(inputData) {
   console.log(inputData);
 
@@ -33,7 +90,10 @@ function processData(inputData) {
     return {
       name: column,
       correlations: [],
-      tsne: null
+      tsne: null,
+      highlight: false,
+      selected: false,
+      connection: null
     };
   });
 
@@ -47,7 +107,10 @@ function processData(inputData) {
           value: +inputData[i][dimension.name]
         };
       }),
-      tsne: null
+      tsne: null,
+      highlight: false,
+      selected: false,
+      connection: null
     };
   });
 
@@ -109,10 +172,6 @@ function processData(inputData) {
     });
   });
 
-  function normalize(v, min, max) {
-    return (v - min) / (max - min);
-  }
-
   data.objects.forEach(function (object) {
     object.tsneInput = object.values.map(function (value) {
       return normalize(value.value, value.dimension.min, value.dimension.max);
@@ -141,6 +200,16 @@ DataStore.dispatchToken = AppDispatcher.register(function (action) {
   switch (action.actionType) {
     case Constants.RECEIVE_DATA:
       processData(action.data);
+      DataStore.emitChange();
+      break;
+
+    case Constants.SELECT_DIMENSION:
+      selectItem(action.dimension, data.dimensions);
+      DataStore.emitChange();
+      break;
+
+    case Constants.SELECT_OBJECT:
+      selectItem(action.object, data.objects);
       DataStore.emitChange();
       break;
   }

@@ -20,7 +20,7 @@ module.exports = {
   selectObject: function (object) {
     AppDispatcher.dispatch({
       actionType: Constants.SELECT_OBJECT,
-      objct: object
+      object: object
     });
   },
   highlightObject: function (object) {
