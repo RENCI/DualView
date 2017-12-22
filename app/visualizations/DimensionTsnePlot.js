@@ -107,12 +107,26 @@ module.exports = function () {
           })
           .call(drag);
 
+      // Add gradient
+      var gradient = svgEnter.append("defs").append("radialGradient")
+          .attr("id", "radialGradient");
+
+      gradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", "#666")
+          .attr("stop-opacity", "1");
+
+      gradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", "#666")
+          .attr("stop-opacity", "0");
+
       // Apply margins
       var g = svgEnter.append("g")
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // Groups for layout
-      var groups = ["progressPoints", "links", "points", "highlights", "selectRectangle"];
+      var groups = ["highlights", "progressPoints", "links", "points", "selectRectangle"];
 
       g.selectAll("g")
           .data(groups)
@@ -134,7 +148,7 @@ module.exports = function () {
     updateScales();
     drawPoints();
     drawProgressPoints();
-    drawLinks();
+//    drawLinks();
     drawHighlights();
 
     // Update tooltips
@@ -366,6 +380,10 @@ module.exports = function () {
         return d.tsne && (d.selected || d.highlight);
       });
 
+      function radius(d) {
+        return radiusScale(radiusMetric(d)) + 10;
+      }
+
       // Bind data
       var highlight = svg.select(".highlights").selectAll(".highlight")
           .data(selected, function(d) { return d.name; });
@@ -373,27 +391,18 @@ module.exports = function () {
       // Enter
       var highlightEnter = highlight.enter().append("circle")
           .attr("class", "highlight")
-          .style("fill", "none")
-          .style("stroke", "black")
-          .style("stroke-opacity", 0.5)
-          .style("stroke-width", 3)
-          .style("stroke-linecap", "round")
-          .style("stroke-dasharray", "5 8")
+          .style("fill", "url(#radialGradient)")
           .style("pointer-events", "none")
           .attr("cx", function(d) { return xScale(d.tsne[0])})
           .attr("cy", function(d) { return yScale(d.tsne[1])})
-          .attr("r", function(d) { return radiusScale(radiusMetric(d)) + 5; });
+          .attr("r", radius);
 
       // Enter + update
-      highlightEnter.merge(highlight)
-          .style("stroke-opacity", function(d) {
-            return d.highlight && d.selected ? 1 : d.highlight ? 0.75 : 0.5;
-          })
-        .transition()
+      highlightEnter.merge(highlight).transition()
           .duration(transitionDuration)
           .attr("cx", function(d) { return xScale(d.tsne[0])})
           .attr("cy", function(d) { return yScale(d.tsne[1])})
-          .attr("r", function(d) { return radiusScale(radiusMetric(d)) + 5; });
+          .attr("r", radius);
 
       // Exit
       highlight.exit().remove();
