@@ -21,7 +21,7 @@ function highlightItem(item, array) {
 
   if (item) item.highlight = true;
 
-  updateConnections(item);
+  updateConnections();
 }
 
 function selectItem(item, array) {
@@ -41,7 +41,7 @@ function selectItem(item, array) {
 
 function updateConnections() {
   var selectedDimensions = data.dimensions.filter(function (dimension) {
-    return dimension.selected;
+    return dimension.highlight || dimension.selected;
   });
 
   if (selectedDimensions.length > 0) {
@@ -56,8 +56,6 @@ function updateConnections() {
         mean: simpleStatistics.mean(selectedValues),
         stdDev: simpleStatistics.standardDeviation(selectedValues)
       };
-
-      console.log(object.connection.stdDev);
     });
   }
   else {
@@ -221,6 +219,11 @@ DataStore.dispatchToken = AppDispatcher.register(function (action) {
   switch (action.actionType) {
     case Constants.RECEIVE_DATA:
       processData(action.data);
+      DataStore.emitChange();
+      break;
+
+    case Constants.HIGHLIGHT_DIMENSION:
+      highlightItem(action.dimension, data.dimensions);
       DataStore.emitChange();
       break;
 

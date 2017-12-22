@@ -182,7 +182,6 @@ module.exports = function () {
           .attr("cy", function(d) { return yScale(d.tsne[1])})
           .style("stroke", "black")
           .on("mouseover", function(d) {
-//            console.log(dispatcher);
             dispatcher.call("highlightDimension", this, d);
           }).on("mouseout", function(d) {
             dispatcher.call("highlightDimension", this, null);
