@@ -77,27 +77,27 @@ function TsneControls(props) {
   return (
     <div>
       <div className="btn-group">
-      <label
-        className="btn btn-default"
-        data-toggle="tooltip"
-        title="Reset parameters"
-        onClick={handleResetClick}>
-          <span className="glyphicon glyphicon-repeat"></span>
-      </label>
-      <label
-        className="btn btn-default"
-        data-toggle="tooltip"
-        title="Rerun tSNE"
-        onClick={handleRerunClick}>
-          <span className="glyphicon glyphicon-refresh"></span>
-      </label>
-      <label
-        className="btn btn-default"
-        data-toggle="tooltip"
-        title="Stop tSNE"
-        onClick={handleStopClick}>
-          <span className="glyphicon glyphicon-stop"></span>
-      </label>
+        <label
+          className="btn btn-default"
+          data-toggle="tooltip"
+          title="Reset parameters"
+          onClick={props.onResetParameters}>
+            <span className="glyphicon glyphicon-repeat"></span>
+        </label>
+        <label
+          className="btn btn-default"
+          data-toggle="tooltip"
+          title="Rerun tSNE"
+          onClick={props.onRerun}>
+            <span className="glyphicon glyphicon-refresh"></span>
+        </label>
+        <label
+          className="btn btn-default"
+          data-toggle="tooltip"
+          title="Stop tSNE"
+          onClick={props.onStop}>
+            <span className="glyphicon glyphicon-stop"></span>
+        </label>
       </div>
       {controls}
       <TsneProgress
