@@ -409,12 +409,12 @@ module.exports = function () {
     }
 
     function fillColor(d) {
-      return d.connection ? colorScale(1 - d.connection.mean) : "#ddd";
+      return d.connection ? colorScale(1 - d.connection.mean) : colorScale(0.5);
     }
 
     function strokeColor(d) {
-//      return d.connection ? strokeScale(1 - d.connection.stdDev) : "#666";
-      return d.connection ? strokeScale(d.connection.extremeness) : "#666";
+//      return d.connection ? strokeScale(1 - d.connection.stdDev) : strokeScale(0.5);
+      return d.connection ? strokeScale(d.connection.extremeness) : strokeScale(0.5);
     }
 
     function radiusMetric(d) {

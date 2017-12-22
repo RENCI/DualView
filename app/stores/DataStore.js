@@ -20,6 +20,36 @@ function extremeness(values) {
   })));
 }
 
+function distanceNormalized(a1, a2) {
+  return simpleStatistics.mean(a1.map(function (v1, i) {
+    return Math.abs(v1 - a2[i]);
+  }));
+
+/*
+  return Math.sqrt(simpleStatistics.sumSimple(a1.map(function (v1, i) {
+    var v = v1 - a2[i];
+
+    return v * v;
+  }))) / Math.sqrt(a1.length);
+*/
+}
+
+function cosineSimilarity(a1, a2) {
+  var num = simpleStatistics.sumSimple(a1.map(function (v1, i) {
+    return v1 * a2[i];
+  }));
+
+  var den1 = Math.sqrt(simpleStatistics.sumSimple(a1.map(function (v) {
+    return v * v;
+  })));
+
+  var den2 = Math.sqrt(simpleStatistics.sumSimple(a2.map(function (v) {
+    return v * v;
+  })));
+
+  return num / (den1 * den2);
+}
+
 function highlightItem(item, array) {
   array.forEach(function (item) {
     item.highlight = false;
@@ -54,6 +84,7 @@ function updateConnections() {
     return object.highlight || object.selected;
   });
 
+  // Highlight objects
   if (selectedDimensions.length > 0) {
     data.objects.forEach(function (object) {
       var selectedValues = object.values.filter(function (value) {
@@ -69,14 +100,30 @@ function updateConnections() {
       };
     });
   }
+  else if (selectedObjects.length > 0) {
+    data.objects.forEach(function (object) {
+      var selectedSimilarities = object.similarities.filter(function (similarity) {
+        return selectedObjects.indexOf(similarity.object) !== -1;
+      }).map(function (similarity) {
+        return similarity.value;
+      });
+
+      object.connection = {
+        mean: simpleStatistics.mean(selectedSimilarities),
+        stdDev: simpleStatistics.standardDeviation(selectedSimilarities),
+        extremeness: extremeness(selectedSimilarities)
+      };
+    });
+  }
   else {
     data.objects.forEach(function (object) {
       object.connection = null;
     });
   }
 
+  // Highlight dimensions
   if (selectedObjects.length > 0) {
-    data.dimensions.forEach(function (dimension) {
+    data.dimensions.forEach(function (dimension, i) {
       var selectedValues = dimension.values.filter(function (value) {
         return selectedObjects.indexOf(value.object) !== -1;
       }).map(function (value) {
@@ -90,17 +137,29 @@ function updateConnections() {
       };
     });
   }
+  else if (selectedDimensions.length > 0) {
+    data.dimensions.forEach(function (dimension) {
+      var selectedCorrelations = dimension.correlations.filter(function (correlation) {
+        return selectedDimensions.indexOf(correlation.dimension) !== -1;
+      }).map(function (correlation) {
+        return correlation.value;
+      });
+
+      dimension.connection = {
+        mean: simpleStatistics.mean(selectedCorrelations),
+        stdDev: simpleStatistics.standardDeviation(selectedCorrelations),
+        extremeness: extremeness(selectedCorrelations)
+      };
+    });
+  }
   else {
     data.dimensions.forEach(function (dimension) {
       dimension.connection = null;
     });
   }
-
 }
 
 function processData(inputData) {
-  console.log(inputData);
-
   data = {};
 
   // Get id column if present
@@ -159,6 +218,7 @@ function processData(inputData) {
           value: inputData[i][attribute.name]
         }
       }),
+      similarities: [],
       tsne: null,
       highlight: false,
       selected: false,
@@ -213,6 +273,39 @@ function processData(inputData) {
       d2.correlations.push({
         dimension: d1,
         value: c
+      });
+    }
+  }
+
+  // Add similarities to objects
+  for (var i = 0; i < data.objects.length; i++) {
+    var o1 = data.objects[i];
+    for (var j = i; j < data.objects.length; j++) {
+      if (i === j) {
+        // Similarity to self
+        o1.similarities.push({
+          object: o1,
+          value: 1
+        });
+
+        continue;
+      }
+
+      var o2 = data.objects[j];
+
+      var d = cosineSimilarity(
+        o1.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
+        o2.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); })
+      );
+
+      o1.similarities.push({
+        object: o2,
+        value: d
+      });
+
+      o2.similarities.push({
+        object: o1,
+        value: d
       });
     }
   }
