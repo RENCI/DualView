@@ -14,6 +14,12 @@ function normalize(v, min, max) {
   return (v - min) / (max - min);
 }
 
+function extremeness(values) {
+  return Math.abs(simpleStatistics.mean(values.map(function (value) {
+    return Math.abs(value - 0.5) * 2;
+  })));
+}
+
 function highlightItem(item, array) {
   array.forEach(function (item) {
     item.highlight = false;
@@ -44,6 +50,10 @@ function updateConnections() {
     return dimension.highlight || dimension.selected;
   });
 
+  var selectedObjects = data.objects.filter(function (object) {
+    return object.highlight || object.selected;
+  });
+
   if (selectedDimensions.length > 0) {
     data.objects.forEach(function (object) {
       var selectedValues = object.values.filter(function (value) {
@@ -54,7 +64,8 @@ function updateConnections() {
 
       object.connection = {
         mean: simpleStatistics.mean(selectedValues),
-        stdDev: simpleStatistics.standardDeviation(selectedValues)
+        stdDev: simpleStatistics.standardDeviation(selectedValues),
+        extremeness: extremeness(selectedValues)
       };
     });
   }
@@ -63,6 +74,28 @@ function updateConnections() {
       object.connection = null;
     });
   }
+
+  if (selectedObjects.length > 0) {
+    data.dimensions.forEach(function (dimension) {
+      var selectedValues = dimension.values.filter(function (value) {
+        return selectedObjects.indexOf(value.object) !== -1;
+      }).map(function (value) {
+        return normalize(value.value, dimension.min, dimension.max);
+      });
+
+      dimension.connection = {
+        mean: simpleStatistics.mean(selectedValues),
+        stdDev: simpleStatistics.standardDeviation(selectedValues),
+        extremeness: extremeness(selectedValues)
+      };
+    });
+  }
+  else {
+    data.dimensions.forEach(function (dimension) {
+      dimension.connection = null;
+    });
+  }
+
 }
 
 function processData(inputData) {
@@ -229,6 +262,11 @@ DataStore.dispatchToken = AppDispatcher.register(function (action) {
 
     case Constants.SELECT_DIMENSION:
       selectItem(action.dimension, data.dimensions);
+      DataStore.emitChange();
+      break;
+
+    case Constants.HIGHLIGHT_OBJECT:
+      highlightItem(action.object, data.objects);
       DataStore.emitChange();
       break;
 

@@ -21,8 +21,8 @@ module.exports = function () {
       radiusScale = d3.scaleLinear(),
       colorScale = d3.scaleSequential(d3ScaleChromatic.interpolateRdBu),
       strokeScale = d3.scaleLinear()
-          .domain([0.5, 1])
-          .range(["#eee", "#000"])
+          .domain([0, 1])
+          .range(["#eee", "#000"]),
 
       // Parameters
       transitionDuration = 2000,
@@ -413,7 +413,8 @@ module.exports = function () {
     }
 
     function strokeColor(d) {
-      return d.connection ? strokeScale(1 - d.connection.stdDev) : "#666";
+//      return d.connection ? strokeScale(1 - d.connection.stdDev) : "#666";
+      return d.connection ? strokeScale(d.connection.extremeness) : "#666";
     }
 
     function radiusMetric(d) {
