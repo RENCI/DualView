@@ -194,7 +194,16 @@ module.exports = function () {
             return d3.descending(radiusMetric(a), radiusMetric(b));
           })
           .attr("r", function(d) { return radiusScale(radiusMetric(d)); })
-          .attr("data-original-title", function(d) { return d.id; })
+          .attr("data-original-title", function(d) {
+            var s = d.id;
+
+            for (var i = 0; i < d.attributes.length; i++) {
+              var a = d.attributes[i];
+              s += ", " + a.attribute.name + ": " + a.value;
+            }
+
+            return s;
+          })
           .style("fill", fillColor)
           .style("stroke", strokeColor)
           .on("click", function(d) {
@@ -224,7 +233,6 @@ module.exports = function () {
           .attr("class", "point")
           .attr("cx", xScale(0))
           .attr("cy", yScale(0))
-          .style("stroke", "black")
           .style("fill-opacity", 0.2)
           .style("stroke-opacity", 0.2);
 
@@ -236,7 +244,8 @@ module.exports = function () {
           .attr("r", function(d) { return radiusScale(radiusMetric(d)); })
           .attr("cx", function(d) { return xScale(d.tsneProgress[0])})
           .attr("cy", function(d) { return yScale(d.tsneProgress[1])})
-          .style("fill", function(d) { return "grey"; });
+          .style("fill", fillColor)
+          .style("stroke", strokeColor);
 
       // Exit
       point.exit().transition()

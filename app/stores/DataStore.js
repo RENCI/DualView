@@ -75,20 +75,35 @@ function processData(inputData) {
   // Get id column if present
   var id = inputData.columns[0] === "" ? inputData.columns[0] : null;
 
-  // Create dimensions
-  data.dimensions = inputData.columns.filter(function (column) {
+  // Create dimensions and attributes
+  data.dimensions = [];
+  data.attributes = [];
+  inputData.columns.forEach(function (column) {
     // Don't include id column
-    if (id === null) return false;
+    if (column === id) return false;
 
     // Filter non-numeric columns
     for (var i = 0; i < inputData.length; i++) {
-      if (isNaN(+inputData[i][column])) return false;
+      var v = inputData[i][column];
+
+       if (isNaN(+v)) {
+         data.attributes.push(column);
+         return;
+      }
     }
 
-    return true;
-  }).map(function (column) {
+    data.dimensions.push(column);
+  });
+
+  data.attributes = data.attributes.map(function (attribute) {
     return {
-      name: column,
+      name: attribute
+    };
+  });
+
+  data.dimensions = data.dimensions.map(function (dimension) {
+    return {
+      name: dimension,
       correlations: [],
       tsne: null,
       highlight: false,
@@ -106,6 +121,12 @@ function processData(inputData) {
           dimension: dimension,
           value: +inputData[i][dimension.name]
         };
+      }),
+      attributes: data.attributes.map(function (attribute) {
+        return {
+          attribute: attribute,
+          value: inputData[i][attribute.name]
+        }
       }),
       tsne: null,
       highlight: false,
