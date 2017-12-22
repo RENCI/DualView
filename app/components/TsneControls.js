@@ -80,16 +80,9 @@ function TsneControls(props) {
         <label
           className="btn btn-default"
           data-toggle="tooltip"
-          title="Reset parameters"
-          onClick={props.onResetParameters}>
-            <span className="glyphicon glyphicon-repeat"></span>
-        </label>
-        <label
-          className="btn btn-default"
-          data-toggle="tooltip"
           title="Rerun tSNE"
           onClick={props.onRerun}>
-            <span className="glyphicon glyphicon-refresh"></span>
+            <span className="glyphicon glyphicon-play"></span>
         </label>
         <label
           className="btn btn-default"
@@ -97,6 +90,13 @@ function TsneControls(props) {
           title="Stop tSNE"
           onClick={props.onStop}>
             <span className="glyphicon glyphicon-stop"></span>
+        </label>
+        <label
+          className="btn btn-default"
+          data-toggle="tooltip"
+          title="Reset parameters"
+          onClick={props.onResetParameters}>
+            <span className="glyphicon glyphicon-repeat"></span>
         </label>
       </div>
       {controls}

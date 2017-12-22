@@ -98,6 +98,9 @@ function updateConnections() {
         stdDev: simpleStatistics.standardDeviation(selectedValues),
         extremeness: extremeness(selectedValues)
       };
+
+      ////
+      object.tsneInput = selectedValues;
     });
   }
   else if (selectedObjects.length > 0) {
@@ -113,16 +116,27 @@ function updateConnections() {
         stdDev: simpleStatistics.standardDeviation(selectedSimilarities),
         extremeness: extremeness(selectedSimilarities)
       };
+
+      ////
+      object.tsneInput = object.values.map(function (value) {
+        return normalize(value.value, value.dimension.min, value.dimension.max);
+      });
     });
   }
   else {
     data.objects.forEach(function (object) {
       object.connection = null;
+
+      ////
+      object.tsneInput = object.values.map(function (value) {
+        return normalize(value.value, value.dimension.min, value.dimension.max);
+      });
     });
   }
 
   // Highlight dimensions
   if (selectedObjects.length > 0) {
+    ////
     data.dimensions.forEach(function (dimension, i) {
       var selectedValues = dimension.values.filter(function (value) {
         return selectedObjects.indexOf(value.object) !== -1;
@@ -135,6 +149,50 @@ function updateConnections() {
         stdDev: simpleStatistics.standardDeviation(selectedValues),
         extremeness: extremeness(selectedValues)
       };
+
+      ////
+      for (var j = i; j < data.dimensions.length; j++) {
+        if (i === j) {
+          // Correlation with self
+          dimension.tsneInput[i] = 0;
+
+          continue;
+        }
+
+        var d2 = data.dimensions[j];
+
+        if (selectedObjects.length === 1) {
+          var v1 = selectedObjects[0].values[i].value;
+          var v2 = selectedObjects[0].values[j].value;
+          var v = Math.abs(v1 - v2);
+
+          dimension.tsneInput[j] = v;
+          d2.tsneInput[i] = v;
+
+          continue;
+        }
+
+        var sv1 = dimension.values.filter(function (value) {
+          return selectedObjects.indexOf(value.object) !== -1;
+        }).map(function (value) {
+          return value.value;
+        });
+
+        var sv2 = d2.values.filter(function (value) {
+          return selectedObjects.indexOf(value.object) !== -1;
+        }).map(function (value) {
+          return value.value;
+        });
+
+        var v = 1 - Math.abs(simpleStatistics.sampleCorrelation(sv1, sv2));
+
+        if (isNaN(v)) {
+          v = 0;
+        }
+
+        dimension.tsneInput[j] = v;
+        d2.tsneInput[i] = v;
+      }
     });
   }
   else if (selectedDimensions.length > 0) {
@@ -150,13 +208,25 @@ function updateConnections() {
         stdDev: simpleStatistics.standardDeviation(selectedCorrelations),
         extremeness: extremeness(selectedCorrelations)
       };
+
+      ////
+      dimension.tsneInput = dimension.correlations.map(function (correlation) {
+        return 1.0 - Math.abs(correlation.value);
+      });
     });
   }
   else {
     data.dimensions.forEach(function (dimension) {
       dimension.connection = null;
+
+      ////
+      dimension.tsneInput = dimension.correlations.map(function (correlation) {
+        return 1.0 - Math.abs(correlation.value);
+      });
     });
   }
+
+  console.log(data);
 }
 
 function processData(inputData) {
@@ -313,7 +383,7 @@ function processData(inputData) {
   // Compute input for tSNE
   data.dimensions.forEach(function (dimension ) {
     dimension.tsneInput = dimension.correlations.map(function (correlation) {
-      return 1.0 - Math.abs(correlation.value);
+      return 1 - Math.abs(correlation.value);
     });
   });
 
