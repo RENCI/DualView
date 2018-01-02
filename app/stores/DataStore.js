@@ -11,6 +11,8 @@ var CHANGE_EVENT = "change";
 var data = null;
 
 function normalize(v, min, max) {
+  if (min === max) return 1;
+
   return (v - min) / (max - min);
 }
 
@@ -46,6 +48,8 @@ function cosineSimilarity(a1, a2) {
   var den2 = Math.sqrt(simpleStatistics.sumSimple(a2.map(function (v) {
     return v * v;
   })));
+
+  if (den1 === 0 || den2 === 0) return 1;
 
   return num / (den1 * den2);
 }
