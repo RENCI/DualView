@@ -10,11 +10,29 @@ var MainSection = require("../components/MainSection");
 
 //var filename = "data/mycars.csv";
 //var filename = "data/mystates.csv";
-//var filename = "data/NHS_PCT_sample04.csv";
+var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/NHS_PCT_sample05.csv";
 //var filename = "data/NHS_practice_qof_prev_1011_cluster.csv";
 //var filename = "data/swiss.csv";
-var filename = "data/NFL Combine 2017.csv";
+//var filename = "data/NFL Combine 2017.csv";
+//var filename = "data/descriptors.csv";
+
+//var filename = "data/ais.csv";
+//var filename = "data/Benefits.csv";
+//var filename = "data/car90.csv";
+//var filename = "data/Caterpillars.csv";
+//var filename = "data/cps3.csv";
+//var filename = "data/Crime.csv";
+//var filename = "data/crohn.csv";
+//var filename = "data/HELPrct.csv";
+//var filename = "data/jobs.csv";
+//var filename = "data/loti.csv";
+//var filename = "data/nuclear.csv";
+//var filename = "data/OJ.csv";
+//var filename = "data/pension.csv";
+//var filename = "data/possum.csv";
+//var filename = "data/rockArt.csv";
+//var filename = "data/USJudgeRatings.csv";
 
 var divStyle = {
   height: "100%",
@@ -53,6 +71,8 @@ class AppContainer extends React.Component {
         console.log(error);
         return;
       }
+
+      console.log(data);
 
       var data2 = data.slice(0, 500);
       data2.columns = data.columns;
