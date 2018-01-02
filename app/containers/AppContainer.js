@@ -10,12 +10,14 @@ var MainSection = require("../components/MainSection");
 
 //var filename = "data/mycars.csv";
 //var filename = "data/mystates.csv";
-var filename = "data/NHS_PCT_sample04.csv";
+//var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/NHS_PCT_sample05.csv";
 //var filename = "data/NHS_practice_qof_prev_1011_cluster.csv";
 //var filename = "data/swiss.csv";
 //var filename = "data/NFL Combine 2017.csv";
 //var filename = "data/descriptors.csv";
+
+var filename = "data/crohn.csv";
 
 //var filename = "data/ais.csv";
 //var filename = "data/Benefits.csv";
@@ -23,7 +25,6 @@ var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/Caterpillars.csv";
 //var filename = "data/cps3.csv";
 //var filename = "data/Crime.csv";
-//var filename = "data/crohn.csv";
 //var filename = "data/HELPrct.csv";
 //var filename = "data/jobs.csv";
 //var filename = "data/loti.csv";
@@ -33,6 +34,23 @@ var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/possum.csv";
 //var filename = "data/rockArt.csv";
 //var filename = "data/USJudgeRatings.csv";
+//var filename = "data/affect.csv";
+//var filename = "data/Hoops.csv";
+//var filename = "data/affairs.csv";
+//var filename = "data/traffic2.csv";
+//var filename = "data/discrim.csv";
+//var filename = "data/iris.csv";
+//var filename = "data/socsupport.csv";
+//var filename = "data/std.csv";
+//var filename = "data/toxicity.csv";
+//var filename = "data/Caschool.csv";
+//var filename = "data/Bankingcrises.csv";
+//var filename = "data/pbc.csv";
+//var filename = "data/HELPfull.csv";
+//var filename = "data/Caravan.csv";
+//var filename= "data/College.csv";
+//var filename = "data/kielmc.csv";
+var filename = "data/mlb1.csv";
 
 var divStyle = {
   height: "100%",
@@ -74,7 +92,7 @@ class AppContainer extends React.Component {
 
       console.log(data);
 
-      var data2 = data.slice(0, 500);
+      var data2 = data.slice(0, 800);
       data2.columns = data.columns;
 
       ServerActionCreators.receiveData(data2);
