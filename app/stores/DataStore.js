@@ -36,6 +36,12 @@ function distanceNormalized(a1, a2) {
 */
 }
 
+function pValue(a1, a2) {
+  // XXX: This is a hack approximation
+  return a1.length > 1 && a2.length > 1 ?
+         Math.abs(simpleStatistics.tTestTwoSample(a1, a2)) / 2.8 : 1;
+}
+
 function cosineSimilarity(a1, a2) {
   var num = simpleStatistics.sumSimple(a1.map(function (v1, i) {
     return v1 * a2[i];
@@ -97,10 +103,17 @@ function updateConnections() {
         return normalize(value.value, value.dimension.min, value.dimension.max);
       });
 
+      var unselectedValues = object.values.filter(function (value) {
+        return selectedDimensions.indexOf(value.dimension) === -1;
+      }).map(function (value) {
+        return normalize(value.value, value.dimension.min, value.dimension.max);
+      });
+
       object.connection = {
         mean: simpleStatistics.mean(selectedValues),
         stdDev: simpleStatistics.standardDeviation(selectedValues),
-        extremeness: extremeness(selectedValues)
+        extremeness: extremeness(selectedValues),
+        pValue: pValue(selectedValues, unselectedValues)
       };
 
       ////
@@ -115,10 +128,17 @@ function updateConnections() {
         return similarity.value;
       });
 
+      var unselectedSimilarities = object.similarities.filter(function (similarity) {
+        return selectedObjects.indexOf(similarity.object) === -1;
+      }).map(function (similarity) {
+        return similarity.value;
+      });
+
       object.connection = {
         mean: simpleStatistics.mean(selectedSimilarities),
         stdDev: simpleStatistics.standardDeviation(selectedSimilarities),
-        extremeness: extremeness(selectedSimilarities)
+        extremeness: extremeness(selectedSimilarities),
+        pValue: pValue(selectedSimilarities, unselectedSimilarities)
       };
 
       ////
@@ -148,10 +168,17 @@ function updateConnections() {
         return normalize(value.value, dimension.min, dimension.max);
       });
 
+      var unselectedValues = dimension.values.filter(function (value) {
+        return selectedObjects.indexOf(value.object) === -1;
+      }).map(function (value) {
+        return normalize(value.value, dimension.min, dimension.max);
+      });
+
       dimension.connection = {
         mean: simpleStatistics.mean(selectedValues),
         stdDev: simpleStatistics.standardDeviation(selectedValues),
-        extremeness: extremeness(selectedValues)
+        extremeness: extremeness(selectedValues),
+        pValue: pValue(selectedValues, unselectedValues)
       };
 
       ////
@@ -207,10 +234,17 @@ function updateConnections() {
         return correlation.value;
       });
 
+      var unselectedCorrelations = dimension.correlations.filter(function (correlation) {
+        return selectedDimensions.indexOf(correlation.dimension) === -1;
+      }).map(function (correlation) {
+        return correlation.value;
+      });
+
       dimension.connection = {
         mean: simpleStatistics.mean(selectedCorrelations),
         stdDev: simpleStatistics.standardDeviation(selectedCorrelations),
-        extremeness: extremeness(selectedCorrelations)
+        extremeness: extremeness(selectedCorrelations),
+        pValue: pValue(selectedCorrelations, unselectedCorrelations)
       };
 
       ////
@@ -352,6 +386,7 @@ function processData(inputData) {
   }
 
   // Add similarities to objects
+  var minSimilarity = 1;
   for (var i = 0; i < data.objects.length; i++) {
     var o1 = data.objects[i];
     for (var j = i; j < data.objects.length; j++) {
@@ -372,6 +407,8 @@ function processData(inputData) {
         o2.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); })
       );
 
+      if (d < minSimilarity) minSimilarity = d;
+
       o1.similarities.push({
         object: o2,
         value: d
@@ -383,6 +420,13 @@ function processData(inputData) {
       });
     }
   }
+
+  // Normalize similarities
+  data.objects.forEach(function (object) {
+    object.similarities.forEach(function (similarity) {
+      similarity.value = normalize(similarity.value, minSimilarity, 1);
+    });
+  });
 
   // Compute input for tSNE
   data.dimensions.forEach(function (dimension ) {
