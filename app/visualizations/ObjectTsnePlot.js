@@ -20,6 +20,9 @@ module.exports = function () {
           .domain([-1, 1]),
       radiusScale = d3.scaleLinear(),
       colorScale = d3.scaleSequential(d3ScaleChromatic.interpolateRdBu),
+      colorRescale = d3.scaleLinear()
+          .domain([0, 1])
+          .range([0.1, 0.9]),
       strokeScale = d3.scaleLinear()
           .domain([0, 1])
           .range(["#eee", "#000"]),
@@ -418,7 +421,7 @@ module.exports = function () {
     }
 
     function fillColor(d) {
-      return d.connection ? colorScale(1 - d.connection.mean) : colorScale(0.5);
+      return d.connection ? colorScale(colorRescale(1 - d.connection.mean)) : colorScale(colorRescale(0.5));
     }
 
     function strokeColor(d) {
