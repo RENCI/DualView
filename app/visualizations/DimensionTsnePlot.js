@@ -211,7 +211,7 @@ module.exports = function () {
             return d3.descending(radiusMetric(a), radiusMetric(b));
           })
           .attr("r", function(d) { return radiusScale(radiusMetric(d)); })
-          .attr("data-original-title", function(d) { return d.name; })
+          .attr("data-original-title", title)
           .style("fill", fillColor)
           .style("stroke", strokeColor)
           .on("click", function(d) {
@@ -411,14 +411,18 @@ module.exports = function () {
       highlight.exit().remove();
     }
 
+    function title(d) {
+      return d.connection ? (d.name + ", p value: " + d.connection.pValue) : d.name;
+    }
+
     function fillColor(d) {
       return d.connection ? colorScale(colorRescale(1 - d.connection.mean)) : colorScale(colorRescale(0.5));
     }
 
     function strokeColor(d) {
 //      return d.connection ? strokeScale(1 - d.connection.stdDev) : strokeScale(0.5);
-      return d.connection ? strokeScale(d.connection.extremeness) : strokeScale(0.5);
-//      return d.connection ? strokeScale(d.connection.pValue) : strokeScale(0.5);
+//      return d.connection ? strokeScale(d.connection.extremeness) : strokeScale(0.5);
+      return d.connection ? strokeScale(1 - d.connection.pValue) : strokeScale(0.5);
     }
 
     function radiusMetric(d) {

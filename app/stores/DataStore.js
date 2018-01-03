@@ -3,6 +3,7 @@ var EventEmitter = require("events").EventEmitter;
 var assign = require("object-assign");
 var Constants = require("../constants/Constants");
 var simpleStatistics = require("simple-statistics");
+var ttest = require("ttest");
 var d3 = require("d3");
 
 var CHANGE_EVENT = "change";
@@ -37,9 +38,17 @@ function distanceNormalized(a1, a2) {
 }
 
 function pValue(a1, a2) {
-  // XXX: This is a hack approximation
-  return a1.length > 1 && a2.length > 1 ?
-         Math.abs(simpleStatistics.tTestTwoSample(a1, a2)) / 2.8 : 1;
+  if (a1.length <= 1 || a2.length <= 1) return 0;
+
+  var t = simpleStatistics.tTestTwoSample(a1, a2);
+
+  var p = simpleStatistics.cumulativeStdNormalProbability(t);
+
+  var stat = ttest(a1, a2);
+
+  console.log(p, stat.pValue());
+
+  return stat.pValue();
 }
 
 function cosineSimilarity(a1, a2) {

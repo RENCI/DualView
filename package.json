@@ -19,7 +19,8 @@
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "simple-statistics": "^5.2.1",
-    "tsne-js": "^1.0.3"
+    "tsne-js": "^1.0.3",
+    "ttest": "^1.1.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
