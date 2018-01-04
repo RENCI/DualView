@@ -11,42 +11,19 @@ var CHANGE_EVENT = "change";
 // The data
 var data = null;
 
+// Connection metrics to use
+var objectConnectionValue = "mean";
+var objectConnectionConsistency = "extremeness";
+var dimensionConnectionValue = "mean";
+var dimensionConnectionConsistency = "extremeness";
+
+// Object similarity metric to use
+var objectSimilarity = "cosine";
+
 function normalize(v, min, max) {
   if (min === max) return 1;
 
   return (v - min) / (max - min);
-}
-
-function extremeness(values) {
-  return Math.abs(simpleStatistics.mean(values.map(function (value) {
-    return Math.abs(value - 0.5) * 2;
-  })));
-}
-
-function distance(a1, a2) {
-  return Math.sqrt(simpleStatistics.sumSimple(a1.map(function (v1, i) {
-    var v = v1 - a2[i];
-
-    return v * v;
-  })));
-}
-
-function minkowski(a1, a2, p) {
-  return Math.pow(simpleStatistics.sumSimple(a1.map(function (v1, i) {
-    return Math.pow(Math.abs(v1 - a2[i]), p);
-  })), 1 / p);
-}
-
-function pValue(a1, a2) {
-  if (a1.length <= 1 || a2.length <= 1) return 0;
-
-  var t = simpleStatistics.tTestTwoSample(a1, a2);
-
-  var p = simpleStatistics.cumulativeStdNormalProbability(t);
-
-  var stat = ttest(a1, a2);
-
-  return stat.pValue();
 }
 
 function cosineSimilarity(a1, a2) {
@@ -65,6 +42,34 @@ function cosineSimilarity(a1, a2) {
   if (den1 === 0 || den2 === 0) return 1;
 
   return num / (den1 * den2);
+}
+
+function distance(a1, a2) {
+  return Math.sqrt(simpleStatistics.sumSimple(a1.map(function (v1, i) {
+    var v = v1 - a2[i];
+
+    return v * v;
+  })));
+}
+
+function minkowski(a1, a2, p) {
+  return Math.pow(simpleStatistics.sumSimple(a1.map(function (v1, i) {
+    return Math.pow(Math.abs(v1 - a2[i]), p);
+  })), 1 / p);
+}
+
+function extremeness(values) {
+  return Math.abs(simpleStatistics.mean(values.map(function (value) {
+    return Math.abs(value - 0.5) * 2;
+  })));
+}
+
+function pValue(a1, a2) {
+  if (a1.length <= 1 || a2.length <= 1) return 0;
+
+  var stat = ttest(a1, a2);
+
+  return stat.pValue();
 }
 
 function highlightItem(item, array) {
@@ -101,26 +106,58 @@ function updateConnections() {
     return object.highlight || object.selected;
   });
 
+  // In case of using p-value
+  var unselectedDimensions = data.dimensions.filter(function (dimension) {
+    return !dimension.highlight && !dimension.selected;
+  });
+
+  var unselectedObjects = data.objects.filter(function (object) {
+    return !object.highlight && !object.selected;
+  });
+
   // Highlight objects
   if (selectedDimensions.length > 0) {
-    data.objects.forEach(function (object) {
-      var selectedValues = object.values.filter(function (value) {
-        return selectedDimensions.indexOf(value.dimension) !== -1;
-      }).map(function (value) {
-        return normalize(value.value, value.dimension.min, value.dimension.max);
+    data.objects.forEach(function (object, i) {
+      var value;
+      var consistency;
+
+      var selectedValues = selectedDimensions.map(function (dimension) {
+        return dimension.values[i].normalized;
       });
 
-      var unselectedValues = object.values.filter(function (value) {
-        return selectedDimensions.indexOf(value.dimension) === -1;
-      }).map(function (value) {
-        return normalize(value.value, value.dimension.min, value.dimension.max);
-      });
+      switch (objectConnectionValue) {
+        case "mean":
+          value = simpleStatistics.mean(selectedValues);
+          break;
+
+        default:
+          console.log("Unknown object connection value");
+      }
+
+      switch (objectConnectionConsistency) {
+        case "extremeness":
+          consistency = extremeness(selectedValues);
+          break;
+
+        case "stdDev":
+          consistency = 1 - simpleStatistics.standardDeviation(selectedValues);
+          break;
+
+        case "pValue":
+          var unselectedValues = selectedDimensions.map(function (dimension) {
+            return dimension.values[i].normalized;
+          });
+
+          consistency = 1 - pValue(selectedValues, unselectedValues);
+          break;
+
+        default:
+          console.log("Uknown object connection consistency");
+      }
 
       object.connection = {
-        mean: simpleStatistics.mean(selectedValues),
-        stdDev: simpleStatistics.standardDeviation(selectedValues),
-        extremeness: extremeness(selectedValues),
-        pValue: pValue(selectedValues, unselectedValues)
+        value: value,
+        consistency: consistency
       };
 
       ////
@@ -128,29 +165,52 @@ function updateConnections() {
     });
   }
   else if (selectedObjects.length > 0) {
-    data.objects.forEach(function (object) {
-      var selectedSimilarities = object.similarities.filter(function (similarity) {
-        return selectedObjects.indexOf(similarity.object) !== -1;
-      }).map(function (similarity) {
-        return similarity.value;
+    data.objects.forEach(function (object, i) {
+      var value;
+      var consistency;
+
+      var selectedSimilarities = selectedObjects.map(function (selected) {
+        return selected.similarities[i].scaled;
       });
 
-      var unselectedSimilarities = object.similarities.filter(function (similarity) {
-        return selectedObjects.indexOf(similarity.object) === -1;
-      }).map(function (similarity) {
-        return similarity.value;
-      });
+      switch (objectConnectionValue) {
+        case "mean":
+          value = simpleStatistics.mean(selectedSimilarities);
+          break;
+
+        default:
+          console.log("Unknown object connection value");
+      }
+
+      switch (objectConnectionConsistency) {
+        case "extremeness":
+          consistency = extremeness(selectedSimilarities);
+          break;
+
+        case "stdDev":
+          consistency = 1 - simpleStatistics.standardDeviation(selectedSimilarities);
+          break;
+
+        case "pValue":
+          var unselectedSimilarities = unselectedObjects.map(function (unselected) {
+            return unselected.similarities[i].scaled;
+          });
+
+          consistency = 1 - pValue(selectedSimilarities, unselectedSimilarities);
+          break;
+
+        default:
+          console.log("Uknown object connection consistency");
+      }
 
       object.connection = {
-        mean: simpleStatistics.mean(selectedSimilarities),
-        stdDev: simpleStatistics.standardDeviation(selectedSimilarities),
-        extremeness: extremeness(selectedSimilarities),
-        pValue: pValue(selectedSimilarities, unselectedSimilarities)
+        value: value,
+        consistency: consistency
       };
 
       ////
       object.tsneInput = object.values.map(function (value) {
-        return normalize(value.value, value.dimension.min, value.dimension.max);
+        return value.normalized;
       });
     });
   }
@@ -160,7 +220,7 @@ function updateConnections() {
 
       ////
       object.tsneInput = object.values.map(function (value) {
-        return normalize(value.value, value.dimension.min, value.dimension.max);
+        return value.normalized;
       });
     });
   }
@@ -356,8 +416,18 @@ function processData(inputData) {
 
     dimension.min = extent[0];
     dimension.max = extent[1];
+
+    dimension.values.forEach(function (value) {
+      value.normalized = normalize(value.value, dimension.min, dimension.max);
+    });
   });
 
+  // Add normalized values to objects
+  data.objects.forEach(function (object, i) {
+    object.values.forEach(function (value) {
+      value.normalized = value.dimension.values[i].normalized;
+    });
+  });
 
   // Add correlations to dimensions
   for (var i = 0; i < data.dimensions.length; i++) {
@@ -436,10 +506,10 @@ function processData(inputData) {
     }
   }
 
-  // Normalize similarities
+  // Add scaled similarities
   data.objects.forEach(function (object) {
     object.similarities.forEach(function (similarity) {
-      similarity.value = normalize(similarity.value, minSimilarity, maxSimilarity);
+      similarity.scaled = normalize(similarity.value, minSimilarity, maxSimilarity);
     });
   });
 
