@@ -394,6 +394,7 @@ function processData(inputData) {
 
   // Add similarities to objects
   var minSimilarity = 1;
+  var maxSimilarity = 0;
   for (var i = 0; i < data.objects.length; i++) {
     var o1 = data.objects[i];
     for (var j = i; j < data.objects.length; j++) {
@@ -409,21 +410,19 @@ function processData(inputData) {
 
       var o2 = data.objects[j];
 
-/*
       var d = cosineSimilarity(
         o1.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
         o2.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); })
       );
-*/
+/*
       var d = 1 - minkowski(
         o1.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
         o2.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
         data.dimensions.length
       );
-
+*/
       if (d < minSimilarity) minSimilarity = d;
-
-       if (d > 1) console.log("sup");
+      if (d > maxSimilarity) maxSimilarity = d;
 
       o1.similarities.push({
         object: o2,
@@ -436,14 +435,13 @@ function processData(inputData) {
       });
     }
   }
-/*
+
   // Normalize similarities
   data.objects.forEach(function (object) {
     object.similarities.forEach(function (similarity) {
-      similarity.value = normalize(similarity.value, minSimilarity, 1);
+      similarity.value = normalize(similarity.value, minSimilarity, maxSimilarity);
     });
   });
-*/
 
   // Compute input for tSNE
   data.dimensions.forEach(function (dimension ) {
