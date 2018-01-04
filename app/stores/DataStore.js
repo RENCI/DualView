@@ -23,18 +23,18 @@ function extremeness(values) {
   })));
 }
 
-function distanceNormalized(a1, a2) {
-  return simpleStatistics.mean(a1.map(function (v1, i) {
-    return Math.abs(v1 - a2[i]);
-  }));
-
-/*
+function distance(a1, a2) {
   return Math.sqrt(simpleStatistics.sumSimple(a1.map(function (v1, i) {
     var v = v1 - a2[i];
 
     return v * v;
-  }))) / Math.sqrt(a1.length);
-*/
+  })));
+}
+
+function minkowski(a1, a2, p) {
+  return Math.pow(simpleStatistics.sumSimple(a1.map(function (v1, i) {
+    return Math.pow(Math.abs(v1 - a2[i]), p);
+  })), 1 / p);
 }
 
 function pValue(a1, a2) {
@@ -45,8 +45,6 @@ function pValue(a1, a2) {
   var p = simpleStatistics.cumulativeStdNormalProbability(t);
 
   var stat = ttest(a1, a2);
-
-  console.log(p, stat.pValue());
 
   return stat.pValue();
 }
@@ -411,12 +409,21 @@ function processData(inputData) {
 
       var o2 = data.objects[j];
 
+/*
       var d = cosineSimilarity(
         o1.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
         o2.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); })
       );
+*/
+      var d = 1 - minkowski(
+        o1.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
+        o2.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
+        data.dimensions.length
+      );
 
       if (d < minSimilarity) minSimilarity = d;
+
+       if (d > 1) console.log("sup");
 
       o1.similarities.push({
         object: o2,
@@ -429,13 +436,14 @@ function processData(inputData) {
       });
     }
   }
-
+/*
   // Normalize similarities
   data.objects.forEach(function (object) {
     object.similarities.forEach(function (similarity) {
       similarity.value = normalize(similarity.value, minSimilarity, 1);
     });
   });
+*/
 
   // Compute input for tSNE
   data.dimensions.forEach(function (dimension ) {
