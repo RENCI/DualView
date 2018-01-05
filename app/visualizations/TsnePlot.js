@@ -423,23 +423,13 @@ module.exports = function () {
     }
 
     function title(d) {
-      if (d.correlations) {
-        return d.connection ?
-               (d.name + ", value: " + d.connection.value + ", consistency: " + d.connection.consistency) :
-               d.name;
+      var s = d.relations ? d.name : d.id;
+
+      if (d.connection) {
+        s += ", value: " + d.connection.value + ", consistency: " + d.connection.consistency;
       }
-      else {
-        var s = d.id;
 
-        for (var i = 0; i < d.attributes.length; i++) {
-          var a = d.attributes[i];
-          s += ", " + a.attribute.name + ": " + a.value;
-        }
-
-        if (d.connection) s += ", value: " + d.connection.value + ", consistency: " + d.connection.consistency;
-
-        return s;
-      }
+      return s;
     }
 
     function fillColor(d) {

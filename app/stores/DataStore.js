@@ -5,6 +5,7 @@ var Constants = require("../constants/Constants");
 var DataUtils = require("../utils/DataUtils");
 var simpleStatistics = require("simple-statistics");
 var ttest = require("ttest");
+var jStat = require("jStat").jStat;
 var d3 = require("d3");
 
 var CHANGE_EVENT = "change";
@@ -97,6 +98,26 @@ function pValue(a1, a2) {
   var stat = ttest(a1, a2);
 
   return stat.pValue();
+}
+
+function categoricalRegression(categorical, numeric) {
+  // n - 1 dummy categories
+  var categories = categorical.categories.slice(0, -1);
+
+  // Setup multiple regression using
+  var data = categorical.values.map(function (value, i) {
+    var d = categories.map(function (category) {
+      return value.value === category ? 1 : 0;
+    });
+
+    d.push(numeric.values[i].value);
+
+    return d;
+  });
+
+  console.log(data);
+
+  return 1;
 }
 
 function highlightItem(item, array) {
@@ -315,7 +336,7 @@ function updateConnections() {
         consistency: consistency
       };
 
-      //// XXX: Move correlation computation to separate function
+      //// XXX: Move relation computation to separate function
       var selectedValues1 = selectedObjects.map(function (object) {
         return object.values[i].value;
       });
@@ -361,17 +382,17 @@ function updateConnections() {
     var consistency;
 
     data.dimensions.forEach(function (dimension, i) {
-      var selectedCorrelations = selectedDimensions.map(function (selected) {
-        return selected.correlations[i].value;
+      var selectedRelations = selectedDimensions.map(function (selected) {
+        return selected.relations[i].value;
       });
 
       switch (dimensionConnectionValue) {
         case "mean":
-          value = simpleStatistics.mean(selectedCorrelations);
+          value = simpleStatistics.mean(selectedRelations);
           break;
 
         case "median":
-          value = simpleStatistics.median(selectedCorrelations);
+          value = simpleStatistics.median(selectedRelations);
           break;
 
         default:
@@ -380,16 +401,16 @@ function updateConnections() {
 
       switch (dimensionConnectionConsistency) {
         case "extremeness":
-          consistency = extremeness(selectedCorrelations);
+          consistency = extremeness(selectedRelations);
           break;
 
         case "stdDev":
-          consistency = 1 - simpleStatistics.standardDeviation(selectedCorrelations);
+          consistency = 1 - simpleStatistics.standardDeviation(selectedRelations);
           break;
 
         case "pValue":
-          var unselectedCorrelations = unselectedDimensions.map(function (unselected) {
-            return unselected.correlations[i];
+          var unselectedRelations = unselectedDimensions.map(function (unselected) {
+            return unselected.relations[i];
           });
 
           consistency = 1 - pValue(selectedValues, unselectedValues);
@@ -405,8 +426,8 @@ function updateConnections() {
       };
 
       ////
-      dimension.tsneInput = dimension.correlations.map(function (correlation) {
-        return 1 - Math.abs(correlation.value);
+      dimension.tsneInput = dimension.relations.map(function (relation) {
+        return 1 - Math.abs(relation.value);
       });
     });
   }
@@ -415,8 +436,8 @@ function updateConnections() {
       dimension.connection = null;
 
       ////
-      dimension.tsneInput = dimension.correlations.map(function (correlation) {
-        return 1 - Math.abs(correlation.value);
+      dimension.tsneInput = dimension.relations.map(function (relation) {
+        return 1 - Math.abs(relation.value);
       });
     });
   }
@@ -430,36 +451,34 @@ function processData(inputData) {
   // Get id column if present
   var id = inputData.columns[0] === "" ? inputData.columns[0] : null;
 
-  // Create dimensions and attributes
+  // Create dimensions
   data.dimensions = [];
-  data.attributes = [];
-  inputData.columns.forEach(function (column) {
+  inputData.columns.filter(function (column) {
     // Don't include id column
     if (column === id) return false;
-
-    // Filter non-numeric columns
-    for (var i = 0; i < inputData.length; i++) {
-      var v = inputData[i][column];
-
-       if (isNaN(+v)) {
-         data.attributes.push(column);
-         return;
-      }
-    }
 
     data.dimensions.push(column);
   });
 
-  data.attributes = data.attributes.map(function (attribute) {
-    return {
-      name: attribute
-    };
-  });
+  data.dimensions = inputData.columns.filter(function (column) {
+    return column !== id;
+  }).map(function (column) {
+    // Check for categorical
+    var categorical = false;
 
-  data.dimensions = data.dimensions.map(function (dimension) {
+    for (var i = 0; i < inputData.length; i++) {
+      var v = inputData[i][column];
+
+       if (isNaN(+v)) {
+         categorical = true;
+         break;
+      }
+    }
+
     return {
-      name: dimension,
-      correlations: [],
+      name: column,
+      categorical: categorical,
+      relations: [],
       tsne: null,
       highlight: false,
       selected: false,
@@ -472,16 +491,14 @@ function processData(inputData) {
     return {
       id: id !== null ? object[id] : i,
       values: data.dimensions.map(function (dimension) {
+        var value = inputData[i][dimension.name];
+
+        if (!dimension.categorical) value = +value;
+
         return {
           dimension: dimension,
-          value: +inputData[i][dimension.name]
+          value: value
         };
-      }),
-      attributes: data.attributes.map(function (attribute) {
-        return {
-          attribute: attribute,
-          value: inputData[i][attribute.name]
-        }
       }),
       similarities: [],
       tsne: null,
@@ -500,16 +517,29 @@ function processData(inputData) {
       };
     });
 
-    var extent = d3.extent(dimension.values, function (value) {
-      return value.value;
-    });
+    if (dimension.categorical) {
+      var categories = d3.set(dimension.values.map(function (value) {
+        return value.value;
+      }));
 
-    dimension.min = extent[0];
-    dimension.max = extent[1];
+      dimension.categories = categories.values();
 
-    dimension.values.forEach(function (value) {
-      value.normalized = normalize(value.value, dimension.min, dimension.max);
-    });
+      dimension.values.forEach(function (value) {
+        value.normalized = 1;
+      });
+    }
+    else {
+      var extent = d3.extent(dimension.values, function (value) {
+        return value.value;
+      });
+
+      dimension.min = extent[0];
+      dimension.max = extent[1];
+
+      dimension.values.forEach(function (value) {
+        value.normalized = normalize(value.value, dimension.min, dimension.max);
+      });
+    }
   });
 
   // Add normalized values to objects
@@ -519,13 +549,13 @@ function processData(inputData) {
     });
   });
 
-  // Add correlations to dimensions
+  // Add relations to dimensions
   for (var i = 0; i < data.dimensions.length; i++) {
     var d1 = data.dimensions[i];
     for (var j = i; j < data.dimensions.length; j++) {
       if (i === j) {
-        // Correlation with self
-        d1.correlations.push({
+        // Relation to self
+        d1.relations.push({
           dimension: d1,
           value: 1
         });
@@ -535,19 +565,32 @@ function processData(inputData) {
 
       var d2 = data.dimensions[j];
 
-      var c = simpleStatistics.sampleCorrelation(
-        d1.values.map(function (value) { return value.value; }),
-        d2.values.map(function (value) { return value.value; })
-      );
+      var r;
 
-      d1.correlations.push({
+      if (d1.categorical && d2.categorical) {
+        r = 0.5;
+      }
+      else if (d1.categorical) {
+         r = categoricalRegression(d1, d2);
+      }
+      else if (d2.categorical) {
+        r = categoricalRegression(d2, d1);
+      }
+      else {
+        r = simpleStatistics.sampleCorrelation(
+          d1.values.map(function (value) { return value.value; }),
+          d2.values.map(function (value) { return value.value; })
+        );
+      }
+
+      d1.relations.push({
         dimension: d2,
-        value: c
+        value: r
       });
 
-      d2.correlations.push({
+      d2.relations.push({
         dimension: d1,
-        value: c
+        value: r
       });
     }
   }
@@ -605,8 +648,8 @@ function processData(inputData) {
 
   // Compute input for tSNE
   data.dimensions.forEach(function (dimension ) {
-    dimension.tsneInput = dimension.correlations.map(function (correlation) {
-      return 1 - Math.abs(correlation.value);
+    dimension.tsneInput = dimension.relations.map(function (relation) {
+      return 1 - Math.abs(relation.value);
     });
   });
 
