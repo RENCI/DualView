@@ -11,17 +11,17 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/mycars.csv";
 //var filename = "data/mystates.csv";
 //var filename = "data/NHS_PCT_sample04.csv";
-var filename = "data/NHS_PCT_sample05.csv";
+//var filename = "data/NHS_PCT_sample05.csv";
 //var filename = "data/NHS_practice_qof_prev_1011_cluster.csv";
 //var filename = "data/swiss.csv";
 //var filename = "data/NFL Combine 2017.csv";
 //var filename = "data/descriptors.csv";
 
 //var filename = "data/crohn.csv";
+var filename = "data/car90.csv";
 
 //var filename = "data/ais.csv";
 //var filename = "data/Benefits.csv";
-//var filename = "data/car90.csv";
 //var filename = "data/Caterpillars.csv";
 //var filename = "data/cps3.csv";
 //var filename = "data/Crime.csv";
@@ -64,7 +64,9 @@ var mainStyle = {
 
 function getStateFromStore() {
   return {
-    data: DataStore.getData()
+    data: DataStore.getData(),
+    dimensionControls: DataStore.getDimensionControls(),
+    objectControls: DataStore.getObjectControls()
   };
 }
 
@@ -72,9 +74,7 @@ class AppContainer extends React.Component {
   constructor() {
     super();
 
-    this.state = {
-      data: DataStore.getData()
-    };
+    this.state = getStateFromStore();
 
     // Need to bind this to callback functions here
     this.onDataChange = this.onDataChange.bind(this);

@@ -30,6 +30,24 @@ module.exports = {
     });
   },
 
+  // Dimension visualization controls
+  changeDimensionControl: function (name, value) {
+    AppDispatcher.dispatch({
+      actionType: Constants.CHANGE_DIMENSION_CONTROL,
+      name: name,
+      value: value
+    });
+  },
+
+  // Object visualization controls
+  changeObjectControl: function (name, value) {
+    AppDispatcher.dispatch({
+      actionType: Constants.CHANGE_OBJECT_CONTROL,
+      name: name,
+      value: value
+    });
+  },
+
   // Dimension tSNE controls
   changeDimensionTsneParameter: function (name, value) {
     AppDispatcher.dispatch({

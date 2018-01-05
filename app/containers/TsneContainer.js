@@ -197,12 +197,16 @@ class TsneContainer extends React.Component {
       output: this.state.output
     };
 
+    // Get the children so we can split them up, rendering only the first, which
+    // is assumed to be the plot container, inside a visualization container
+    var children = React.Children.toArray(this.props.children);
+
     return (
       <div>
-        <ViewTitle>{this.props.title}</ViewTitle>
         <VisualizationContainer>
-          {React.cloneElement(this.props.children, props)}
+          {React.cloneElement(children[0], props)}
         </VisualizationContainer>
+        {children.slice(1)}
         <ControlPanel title="tSNE Parameters">
           <TsneControls
             parameters={this.state.parameters}
@@ -219,8 +223,7 @@ class TsneContainer extends React.Component {
 }
 
 TsneContainer.propTypes = {
-  data: PropTypes.array.isRequired,
-  title: PropTypes.string.isRequired
+  data: PropTypes.array.isRequired
 };
 
 module.exports = TsneContainer;

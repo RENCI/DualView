@@ -2,6 +2,7 @@ var AppDispatcher = require("../dispatcher/AppDispatcher");
 var EventEmitter = require("events").EventEmitter;
 var assign = require("object-assign");
 var Constants = require("../constants/Constants");
+var DataUtils = require("../utils/DataUtils");
 var simpleStatistics = require("simple-statistics");
 var ttest = require("ttest");
 var d3 = require("d3");
@@ -11,11 +12,37 @@ var CHANGE_EVENT = "change";
 // The data
 var data = null;
 
-// Connection metrics to use
-var objectConnectionValue = "mean";
-var objectConnectionConsistency = "extremeness";
-var dimensionConnectionValue = "mean";
-var dimensionConnectionConsistency = "extremeness";
+// Controls for dimension data
+var dimensionControls = [
+  {
+    name: "connectionValue",
+    value: "mean",
+    values: ["mean", "median"],
+    label: "connection value"
+  },
+  {
+    name: "connectionConsistency",
+    value: "extremeness",
+    values: ["extremeness", "stdDev", "pValue"],
+    label: "connection consistency"
+  }
+];
+
+// Controls for object data
+var objectControls = [
+  {
+    name: "connectionValue",
+    value: "mean",
+    values: ["mean", "median"],
+    label: "connection value"
+  },
+  {
+    name: "connectionConsistency",
+    value: "extremeness",
+    values: ["extremeness", "stdDev", "pValue"],
+    label: "connection consistency"
+  }
+];
 
 // Object similarity metric to use
 var objectSimilarity = "cosine";
@@ -98,6 +125,11 @@ function selectItem(item, array) {
 }
 
 function updateConnections() {
+  var objectConnectionValue = DataUtils.find(objectControls, "name", "connectionValue").value;
+  var objectConnectionConsistency = DataUtils.find(objectControls, "name", "connectionConsistency").value;
+  var dimensionConnectionValue = DataUtils.find(dimensionControls, "name", "connectionValue").value;
+  var dimensionConnectionConsistency = DataUtils.find(dimensionControls, "name", "connectionConsistency").value;
+
   var selectedDimensions = data.dimensions.filter(function (dimension) {
     return dimension.highlight || dimension.selected;
   });
@@ -128,6 +160,10 @@ function updateConnections() {
       switch (objectConnectionValue) {
         case "mean":
           value = simpleStatistics.mean(selectedValues);
+          break;
+
+        case "median":
+          value = simpleStatistics.median(selectedValues);
           break;
 
         default:
@@ -176,6 +212,10 @@ function updateConnections() {
       switch (objectConnectionValue) {
         case "mean":
           value = simpleStatistics.mean(selectedSimilarities);
+          break;
+
+        case "median":
+          value = simpleStatistics.median(selectedSimilarities);
           break;
 
         default:
@@ -239,6 +279,10 @@ function updateConnections() {
       switch (dimensionConnectionValue) {
         case "mean":
           value = simpleStatistics.mean(selectedValues);
+          break;
+
+        case "median":
+          value = simpleStatistics.median(selectedValues);
           break;
 
         default:
@@ -324,6 +368,10 @@ function updateConnections() {
       switch (dimensionConnectionValue) {
         case "mean":
           value = simpleStatistics.mean(selectedCorrelations);
+          break;
+
+        case "median":
+          value = simpleStatistics.median(selectedCorrelations);
           break;
 
         default:
@@ -571,6 +619,22 @@ function processData(inputData) {
   console.log(data);
 }
 
+function setDimensionControl(name, value) {
+  var control = DataUtils.find(dimensionControls, "name", name);
+
+  if (control) control.value = value;
+
+  updateConnections();
+}
+
+function setObjectControl(name, value) {
+  var control = DataUtils.find(objectControls, "name", name);
+
+  if (control) control.value = value;
+
+  updateConnections();
+}
+
 var DataStore = assign({}, EventEmitter.prototype, {
   emitChange: function () {
     this.emit(CHANGE_EVENT);
@@ -583,6 +647,12 @@ var DataStore = assign({}, EventEmitter.prototype, {
   },
   getData: function () {
     return data;
+  },
+  getDimensionControls: function () {
+    return dimensionControls;
+  },
+  getObjectControls: function () {
+    return objectControls;
   }
 });
 
@@ -610,6 +680,16 @@ DataStore.dispatchToken = AppDispatcher.register(function (action) {
 
     case Constants.SELECT_OBJECT:
       selectItem(action.object, data.objects);
+      DataStore.emitChange();
+      break;
+
+    case Constants.CHANGE_DIMENSION_CONTROL:
+      setDimensionControl(action.name, action.value);
+      DataStore.emitChange();
+      break;
+
+    case Constants.CHANGE_OBJECT_CONTROL:
+      setObjectControl(action.name, action.value);
       DataStore.emitChange();
       break;
   }
