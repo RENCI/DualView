@@ -144,7 +144,7 @@ function updateConnections() {
           break;
 
         case "pValue":
-          var unselectedValues = selectedDimensions.map(function (dimension) {
+          var unselectedValues = unselectedDimensions.map(function (dimension) {
             return dimension.values[i].normalized;
           });
 
@@ -229,29 +229,56 @@ function updateConnections() {
   if (selectedObjects.length > 0) {
     ////
     data.dimensions.forEach(function (dimension, i) {
-      var selectedValues = dimension.values.filter(function (value) {
-        return selectedObjects.indexOf(value.object) !== -1;
-      }).map(function (value) {
-        return normalize(value.value, dimension.min, dimension.max);
+      var value;
+      var consistency;
+
+      var selectedValues = selectedObjects.map(function (object) {
+        return object.values[i].normalized;
       });
 
-      var unselectedValues = dimension.values.filter(function (value) {
-        return selectedObjects.indexOf(value.object) === -1;
-      }).map(function (value) {
-        return normalize(value.value, dimension.min, dimension.max);
-      });
+      switch (dimensionConnectionValue) {
+        case "mean":
+          value = simpleStatistics.mean(selectedValues);
+          break;
+
+        default:
+          console.log("Unknown dimension connection value");
+      }
+
+      switch (dimensionConnectionConsistency) {
+        case "extremeness":
+          consistency = extremeness(selectedValues);
+          break;
+
+        case "stdDev":
+          consistency = 1 - simpleStatistics.standardDeviation(selectedValues);
+          break;
+
+        case "pValue":
+          var unselectedValues = unselectedObjects.map(function (object) {
+            return object.values[i].normalized;
+          });
+
+          consistency = 1 - pValue(selectedValues, unselectedValues);
+          break;
+
+        default:
+          console.log("Uknown dimension connection consistency");
+      }
 
       dimension.connection = {
-        mean: simpleStatistics.mean(selectedValues),
-        stdDev: simpleStatistics.standardDeviation(selectedValues),
-        extremeness: extremeness(selectedValues),
-        pValue: pValue(selectedValues, unselectedValues)
+        value: value,
+        consistency: consistency
       };
 
-      ////
+      //// XXX: Move correlation computation to separate function
+      var selectedValues1 = selectedObjects.map(function (object) {
+        return object.values[i].value;
+      });
+
       for (var j = i; j < data.dimensions.length; j++) {
         if (i === j) {
-          // Correlation with self
+          // Correlation with self, distance of 0
           dimension.tsneInput[i] = 0;
 
           continue;
@@ -260,8 +287,8 @@ function updateConnections() {
         var d2 = data.dimensions[j];
 
         if (selectedObjects.length === 1) {
-          var v1 = selectedObjects[0].values[i].value;
-          var v2 = selectedObjects[0].values[j].value;
+          var v1 = selectedObjects[0].values[i].normalized;
+          var v2 = selectedObjects[0].values[j].normalized;
           var v = Math.abs(v1 - v2);
 
           dimension.tsneInput[j] = v;
@@ -270,19 +297,11 @@ function updateConnections() {
           continue;
         }
 
-        var sv1 = dimension.values.filter(function (value) {
-          return selectedObjects.indexOf(value.object) !== -1;
-        }).map(function (value) {
-          return value.value;
+        var selectedValues2 = selectedObjects.map(function (object) {
+          return object.values[j].value;
         });
 
-        var sv2 = d2.values.filter(function (value) {
-          return selectedObjects.indexOf(value.object) !== -1;
-        }).map(function (value) {
-          return value.value;
-        });
-
-        var v = 1 - Math.abs(simpleStatistics.sampleCorrelation(sv1, sv2));
+        var v = 1 - Math.abs(simpleStatistics.sampleCorrelation(selectedValues1, selectedValues2));
 
         if (isNaN(v)) {
           v = 0;
@@ -294,29 +313,52 @@ function updateConnections() {
     });
   }
   else if (selectedDimensions.length > 0) {
-    data.dimensions.forEach(function (dimension) {
-      var selectedCorrelations = dimension.correlations.filter(function (correlation) {
-        return selectedDimensions.indexOf(correlation.dimension) !== -1;
-      }).map(function (correlation) {
-        return correlation.value;
+    var value;
+    var consistency;
+
+    data.dimensions.forEach(function (dimension, i) {
+      var selectedCorrelations = selectedDimensions.map(function (selected) {
+        return selected.correlations[i].value;
       });
 
-      var unselectedCorrelations = dimension.correlations.filter(function (correlation) {
-        return selectedDimensions.indexOf(correlation.dimension) === -1;
-      }).map(function (correlation) {
-        return correlation.value;
-      });
+      switch (dimensionConnectionValue) {
+        case "mean":
+          value = simpleStatistics.mean(selectedCorrelations);
+          break;
+
+        default:
+          console.log("Unknown dimension connection value");
+      }
+
+      switch (dimensionConnectionConsistency) {
+        case "extremeness":
+          consistency = extremeness(selectedCorrelations);
+          break;
+
+        case "stdDev":
+          consistency = 1 - simpleStatistics.standardDeviation(selectedCorrelations);
+          break;
+
+        case "pValue":
+          var unselectedCorrelations = unselectedDimensions.map(function (unselected) {
+            return unselected.correlations[i];
+          });
+
+          consistency = 1 - pValue(selectedValues, unselectedValues);
+          break;
+
+        default:
+          console.log("Uknown dimension connection consistency");
+      }
 
       dimension.connection = {
-        mean: simpleStatistics.mean(selectedCorrelations),
-        stdDev: simpleStatistics.standardDeviation(selectedCorrelations),
-        extremeness: extremeness(selectedCorrelations),
-        pValue: pValue(selectedCorrelations, unselectedCorrelations)
+        value: value,
+        consistency: consistency
       };
 
       ////
       dimension.tsneInput = dimension.correlations.map(function (correlation) {
-        return 1.0 - Math.abs(correlation.value);
+        return 1 - Math.abs(correlation.value);
       });
     });
   }
@@ -326,7 +368,7 @@ function updateConnections() {
 
       ////
       dimension.tsneInput = dimension.correlations.map(function (correlation) {
-        return 1.0 - Math.abs(correlation.value);
+        return 1 - Math.abs(correlation.value);
       });
     });
   }

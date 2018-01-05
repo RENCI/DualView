@@ -2,7 +2,7 @@ var React = require("react");
 var ReactDOM = require("react-dom");
 var PropTypes = require("prop-types");
 var d3 = require("d3");
-var DimensionTsnePlot = require("../visualizations/DimensionTsnePlot");
+var TsnePlot = require("../visualizations/TsnePlot");
 var ViewActionCreators = require("../actions/ViewActionCreators");
 
 class DimensionTsnePlotContainer extends React.Component {
@@ -10,9 +10,9 @@ class DimensionTsnePlotContainer extends React.Component {
     super();
 
     // Create visualization function
-    this.dimensionTsnePlot = DimensionTsnePlot()
-        .on("selectDimension", this.handleSelectDimension)
-        .on("highlightDimension", this.handleHighlightDimension);
+    this.tsnePlot = TsnePlot()
+        .on("select", this.handleSelectDimension)
+        .on("highlight", this.handleHighlightDimension);
   }
 
   componentWillUpdate(props, state) {
@@ -36,13 +36,13 @@ class DimensionTsnePlotContainer extends React.Component {
       props.data[i].tsneProgress = d;
     });
 
-    this.dimensionTsnePlot
+    this.tsnePlot
         .width(props.width)
         .height(props.width);
 
     d3.select(ReactDOM.findDOMNode(this))
         .datum(props.data)
-        .call(this.dimensionTsnePlot);
+        .call(this.tsnePlot);
   }
 
   handleSelectDimension(dimension) {

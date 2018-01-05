@@ -2,7 +2,7 @@ var React = require("react");
 var ReactDOM = require("react-dom");
 var PropTypes = require("prop-types");
 var d3 = require("d3");
-var ObjectTsnePlot = require("../visualizations/ObjectTsnePlot");
+var TsnePlot = require("../visualizations/TsnePlot");
 var ViewActionCreators = require("../actions/ViewActionCreators");
 
 class ObjectTsnePlotContainer extends React.Component {
@@ -10,9 +10,9 @@ class ObjectTsnePlotContainer extends React.Component {
     super();
 
     // Create visualization function
-    this.objectTsnePlot = ObjectTsnePlot()
-        .on("selectObject", this.handleSelectObject)
-        .on("highlightObject", this.handleHighlightObject);
+    this.tsnePlot = TsnePlot()
+        .on("select", this.handleSelectObject)
+        .on("highlight", this.handleHighlightObject);
   }
 
   componentWillUpdate(props, state) {
@@ -36,13 +36,13 @@ class ObjectTsnePlotContainer extends React.Component {
       props.data[i].tsneProgress = d;
     });
 
-    this.objectTsnePlot
+    this.tsnePlot
         .width(props.width)
         .height(props.width);
 
     d3.select(ReactDOM.findDOMNode(this))
         .datum(props.data)
-        .call(this.objectTsnePlot);
+        .call(this.tsnePlot);
   }
 
   handleSelectObject(object) {
