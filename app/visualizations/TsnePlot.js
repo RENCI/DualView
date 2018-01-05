@@ -66,8 +66,15 @@ module.exports = function () {
             });
           })
           .on("drag", function() {
-            var x = d3.event.x - margin.left,
-                y = d3.event.y - margin.top;
+            function clamp(x, min, max) {
+              return Math.min(Math.max(x, min), max);
+            }
+
+            var x = clamp(d3.event.x, 1, width - 1)
+                y = clamp(d3.event.y, 1, height - 1);
+
+            x -= margin.left;
+            y -= margin.top;
 
             var x1 = Math.min(x0, x);
             var y1 = Math.min(y0, y);
