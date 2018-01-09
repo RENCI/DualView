@@ -92,7 +92,7 @@ class AppContainer extends React.Component {
 
       console.log(data);
 
-      var data2 = data.slice(0, 800);
+      var data2 = data.slice(0, 50);
       data2.columns = data.columns;
 
       ServerActionCreators.receiveData(data2);

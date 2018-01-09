@@ -6,6 +6,9 @@ var DataUtils = require("../utils/DataUtils");
 var simpleStatistics = require("simple-statistics");
 var ttest = require("ttest");
 var jStat = require("jStat").jStat;
+var jsRegression = require("js-regression");
+var regression = require("@smockle/regression").default;
+
 var d3 = require("d3");
 
 var CHANGE_EVENT = "change";
@@ -104,20 +107,20 @@ function categoricalRegression(categorical, numeric) {
   // n - 1 dummy categories
   var categories = categorical.categories.slice(0, -1);
 
-  // Setup multiple regression using
-  var data = categorical.values.map(function (value, i) {
-    var d = categories.map(function (category) {
+  // Setup multiple regression
+  var x = categories.map(function (category) {
+    return categorical.values.map(function (value) {
       return value.value === category ? 1 : 0;
     });
-
-    d.push(numeric.values[i].value);
-
-    return d;
   });
 
-  console.log(data);
+  var y = numeric.values.map(function (value) {
+    return value.value;
+  });
 
-  return 1;
+  var reg = regression(x, y);
+
+  return Math.sqrt(reg.Rsquared);
 }
 
 function highlightItem(item, array) {
@@ -660,6 +663,10 @@ function processData(inputData) {
   });
 
   console.log(data);
+
+  console.log(data.dimensions.filter(function (d) {
+    return d.categorical;
+  }));
 }
 
 function setDimensionControl(name, value) {
