@@ -3,6 +3,7 @@ var ReactDOM = require("react-dom");
 var PropTypes = require("prop-types");
 var d3 = require("d3");
 var TsnePlot = require("../visualizations/TsnePlot");
+var TsneDensityPlot = require("../visualizations/TsneDensityPlot");
 var ViewActionCreators = require("../actions/ViewActionCreators");
 
 class ObjectTsnePlotContainer extends React.Component {
@@ -10,7 +11,7 @@ class ObjectTsnePlotContainer extends React.Component {
     super();
 
     // Create visualization function
-    this.tsnePlot = TsnePlot()
+    this.tsnePlot = TsneDensityPlot()
         .on("select", this.handleSelectObject)
         .on("highlight", this.handleHighlightObject);
   }

@@ -1,4 +1,5 @@
 var d3 = require("d3");
+var d3HexBin = require("d3-hexbin");
 var d3ScaleChromatic = require("d3-scale-chromatic");
 
 module.exports = function () {
@@ -14,12 +15,17 @@ module.exports = function () {
       selected = [],
       dimension = false,
 
+      // Parameters
+      radius = 10,
+      transitionDuration = 2000,
+
       // Scales
       xScale = d3.scaleLinear()
           .domain([-1, 1]),
       yScale = d3.scaleLinear()
           .domain([-1, 1]),
-      radiusScale = d3.scaleLinear(),
+      radiusScale = d3.scaleSqrt()
+          .range([0, radius]),
       colorScale = d3.scaleSequential(d3ScaleChromatic.interpolateRdBu),
       colorRescale = d3.scaleLinear()
           .domain([1, 0])
@@ -28,8 +34,11 @@ module.exports = function () {
           .domain([0, 1])
           .range(["#eee", "#000"]),
 
-      // Parameters
-      transitionDuration = 2000,
+      // Layout
+      hexbin = d3HexBin.hexbin()
+          .radius(radius)
+          .x(function(d) { return xScale(d.tsne[0]); })
+          .y(function(d) { return yScale(d.tsne[1]); }),
 
       // Start with empty selection
       svg = d3.select(),
@@ -37,7 +46,7 @@ module.exports = function () {
       // Event dispatcher
       dispatcher = d3.dispatch("select", "highlight");
 
-  function tsnePlot(selection) {
+  function tsneDensityPlot(selection) {
     selection.each(function(d) {
       data = d;
 
@@ -108,7 +117,7 @@ module.exports = function () {
       }();
 
       var svgEnter = svg.enter().append("svg")
-          .attr("class", "tsnePlot")
+          .attr("class", "tsneDensityPlot")
           .on("mousedown", function() {
             // Stop text highlighting
             d3.event.preventDefault();
@@ -137,7 +146,7 @@ module.exports = function () {
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // Groups for layout
-      var groups = ["highlights", "progressPoints", "links", "points", "selectRectangle"];
+      var groups = ["highlights", "progressHexagons", "hexagons", "selectRectangle"];
 
       g.selectAll("g")
           .data(groups)
@@ -157,83 +166,101 @@ module.exports = function () {
 
     // Draw the visualization
     updateScales();
-    drawPoints();
+    drawHexagons();
     drawProgressPoints();
 //    drawLinks();
     drawHighlights();
 
     // Update tooltips
-    $(".points .point").tooltip();
+    $(".hexagons .hexagon").tooltip();
 
     function updateScales() {
       xScale.range([0, innerWidth()]);
       yScale.range([innerHeight(), 0]);
-
-      var rMin = width / 1000;
-
-      radiusScale
-          .domain([0, d3.max(data, radiusMetric)])
-          .range([rMin, rMin * 10]);
     }
 
-    function drawPoints() {
-      // Only update these points if tSNE has finished
+    function drawHexagons() {
+      // Only update these hexagons if tSNE has finished
       var progress = data.filter(function(d) {
         return d.tsneProgress;
       }).length > 0;
 
       if (progress) return;
 
+      // Update bins
+      var bins = hexbin(data.filter(function(d) {
+        return d.tsne;
+      }));
+
+      // Get max per bin
+      var binMax = d3.max(bins, function(d) {
+        return d.length;
+      });
+
+      radiusScale.domain([0, binMax]);
+
       var showConnection = data.filter(function(d) {
         return d.connection > 0;
       }).length > 0;
 
       // Bind data
-      var point = svg.select(".points").selectAll(".point")
-          .data(data.filter(function(d) {
-            return d.tsne;
-          }), id);
+      var hexagon = svg.select(".hexagons").selectAll(".hexagon")
+          .data(bins);
 
       // Enter
-      var pointEnter = point.enter().append("circle")
-          .attr("class", "point")
+      var hexagonEnter = hexagon.enter().append("path")
+          .attr("class", "hexagon")
           .attr("data-toggle", "tooltip")
           .attr("data-container", "body")
           .attr("data-placement", "auto top")
-          .attr("cx", function(d) { return xScale(d.tsne[0])})
-          .attr("cy", function(d) { return yScale(d.tsne[1])})
+          .attr("d", hex)
+          .attr("transform", transform)
           .style("stroke-width", 2)
           .on("mouseover", function(d) {
-            dispatcher.call("highlight", this, d);
-          }).on("mouseout", function(d) {
-            dispatcher.call("highlight", this, null);
-          });
-
-      // Enter + update
-      pointEnter.merge(point)
-          .sort(function(a, b) {
-            return d3.descending(radiusMetric(a), radiusMetric(b));
+            // XXX: Change to send arrays
+            d.forEach(function (d) {
+              dispatcher.call("highlight", this, d);
+            });
           })
-          .attr("r", function(d) { return radiusScale(radiusMetric(d)); })
-          .attr("data-original-title", title)
-          .style("fill", fillColor)
-          .style("stroke", strokeColor)
+          .on("mouseout", function(d) {
+            dispatcher.call("highlight", this, null);
+          })
           .on("click", function(d) {
-            dispatcher.call("select", this, d);
+            // XXX: Change to send arrays
+            d.forEach(function (d) {
+              dispatcher.call("select", this, d);
+            });
           })
           .on("dblclick", function(d) {
             d3.event.stopPropagation();
-          })
-        .transition()
-          .duration(transitionDuration)
-          .attr("cx", function(d) { return xScale(d.tsne[0])})
-          .attr("cy", function(d) { return yScale(d.tsne[1])});
+          });
+
+      // Enter + update
+      hexagonEnter.merge(hexagon)
+          .attr("r", r)
+          .attr("data-original-title", title)
+          .style("fill", fillColor)
+          .style("stroke", strokeColor)
+          .attr("transform", transform);
 
       // Exit
-      point.exit().remove();
+      hexagon.exit().remove();
+
+      function transform(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+      }
+
+      function hex(d) {
+        return hexbin.hexagon(radiusScale(d.length));
+      }
+
+      function r(d) {
+        return radiusScale(d.length);
+      }
     }
 
     function drawProgressPoints() {
+/*
       // Bind data
       var point = svg.select(".progressPoints").selectAll(".point")
           .data(data.filter(function(d) {
@@ -263,6 +290,7 @@ module.exports = function () {
       point.exit().transition()
           .delay(transitionDuration)
           .remove();
+*/
     }
 
     function drawLinks() {
@@ -383,6 +411,7 @@ module.exports = function () {
     }
 
     function drawHighlights() {
+/*
       var selected = data.filter(function(d) {
         return d.tsne && (d.selected || d.highlight);
       });
@@ -413,6 +442,7 @@ module.exports = function () {
 
       // Exit
       highlight.exit().remove();
+*/
     }
 
     function id(d) {
@@ -420,6 +450,18 @@ module.exports = function () {
     }
 
     function title(d) {
+      var nameKey = d[0].relations ? "name" : "id";
+
+      var s = "";
+
+      d.forEach(function(d, i) {
+        if (i !== 0) s += ", ";
+        s += d[nameKey];
+      });
+
+      return s;
+
+/*
       var s = d.relations ? d.name : d.id;
 
       if (d.connection) {
@@ -427,38 +469,37 @@ module.exports = function () {
       }
 
       return s;
+*/
     }
 
     function fillColor(d) {
-      return d.connection ? colorScale(colorRescale(d.connection.value)) : colorScale(colorRescale(0.5));
+      return colorScale(colorRescale(0.5));
+//      return d.connection ? colorScale(colorRescale(d.connection.value)) : colorScale(colorRescale(0.5));
     }
 
     function strokeColor(d) {
-      return d.connection ? strokeScale(d.connection.consistency) : strokeScale(0.5);
-    }
-
-    function radiusMetric(d) {
-      return 1;
+      return strokeScale(colorRescale(0.5));
+//      return d.connection ? strokeScale(d.connection.consistency) : strokeScale(0.5);
     }
   }
 
-  tsnePlot.width = function(_) {
+  tsneDensityPlot.width = function(_) {
     if (!arguments.length) return width;
     width = _;
-    return tsnePlot;
+    return tsneDensityPlot;
   };
 
-  tsnePlot.height = function(_) {
+  tsneDensityPlot.height = function(_) {
     if (!arguments.length) return height;
     height = _;
-    return tsnePlot;
+    return tsneDensityPlot;
   };
 
   // For registering event callbacks
-  tsnePlot.on = function() {
+  tsneDensityPlot.on = function() {
     var value = dispatcher.on.apply(dispatcher, arguments);
-    return value === dispatcher ? tsnePlot : value;
+    return value === dispatcher ? tsneDensityPlot : value;
   };
 
-  return tsnePlot;
+  return tsneDensityPlot;
 }

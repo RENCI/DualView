@@ -8,7 +8,7 @@ var ResizeContainer = require("./ResizeContainer");
 var HeaderSection = require("../components/HeaderSection");
 var MainSection = require("../components/MainSection");
 
-//var filename = "data/mycars.csv";
+var filename = "data/mycars.csv";
 //var filename = "data/mystates.csv";
 //var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/NHS_PCT_sample05.csv";
@@ -20,7 +20,7 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/crohn.csv";
 //var filename = "data/car90.csv";
 
-var filename = "data/Cholera.csv";
+//var filename = "data/Cholera.csv";
 //var filename = "data/ais.csv";
 //var filename = "data/codling.csv";
 //var filename = "data/hurricNamed.csv";
