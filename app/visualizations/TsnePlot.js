@@ -22,6 +22,7 @@ module.exports = function () {
       radiusScale = d3.scaleLinear(),
       colorScale = d3.scaleSequential(d3ScaleChromatic.interpolateRdBu),
       colorRescale = d3.scaleLinear()
+          .domain([1, 0])
           .range([0.1, 0.9]),
       strokeScale = d3.scaleLinear()
           .domain([0, 1])
@@ -144,15 +145,6 @@ module.exports = function () {
           .attr("class", function(d) { return d; });
 
       svg = svgEnter.merge(svg);
-
-      // Dimension or object
-      if (data[0].name) {
-        // XXX: This is only correct if showing relations...
-        colorRescale.domain([1, -1]);
-      }
-      else {
-        colorRescale.domain([1, 0]);
-      }
 
       draw();
     });

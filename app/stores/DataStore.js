@@ -27,7 +27,7 @@ var dimensionControls = [
   {
     name: "connectionConsistency",
     value: "extremeness",
-    values: ["extremeness", "stdDev", "pValue"],
+    values: ["extremeness", "variabililty", "pValue"],
     label: "connection consistency"
   }
 ];
@@ -43,7 +43,7 @@ var objectControls = [
   {
     name: "connectionConsistency",
     value: "extremeness",
-    values: ["extremeness", "stdDev", "pValue"],
+    values: ["extremeness", "variabililty", "pValue"],
     label: "connection consistency"
   }
 ];
@@ -95,6 +95,12 @@ function extremeness(values) {
   })));
 }
 
+function variabililty(values) {
+  var sd = simpleStatistics.standardDeviation(values);
+
+  return 1 - 2 * sd;
+}
+
 function pValue(a1, a2) {
   if (a1.length <= 1 || a2.length <= 1) return 0;
 
@@ -107,6 +113,8 @@ function categoricalRegression(categorical, numeric) {
   // n - 1 dummy categories
   var categories = categorical.categories.slice(0, -1);
 
+  console.log(categories.length + 1);
+
   // Setup multiple regression
   var x = categories.map(function (category) {
     return categorical.values.map(function (value) {
@@ -118,6 +126,7 @@ function categoricalRegression(categorical, numeric) {
     return value.value;
   });
 
+  // XXX: Performance issues with lots of categorical values
   var reg = regression(x, y);
 
   return Math.sqrt(reg.Rsquared);
@@ -199,8 +208,8 @@ function updateConnections() {
           consistency = extremeness(selectedValues);
           break;
 
-        case "stdDev":
-          consistency = 1 - simpleStatistics.standardDeviation(selectedValues);
+        case "variabililty":
+          consistency = variabililty(selectedValues);
           break;
 
         case "pValue":
@@ -251,8 +260,8 @@ function updateConnections() {
           consistency = extremeness(selectedSimilarities);
           break;
 
-        case "stdDev":
-          consistency = 1 - simpleStatistics.standardDeviation(selectedSimilarities);
+        case "variabililty":
+          consistency = variabililty(selectedSimilarities);
           break;
 
         case "pValue":
@@ -318,8 +327,8 @@ function updateConnections() {
           consistency = extremeness(selectedValues);
           break;
 
-        case "stdDev":
-          consistency = 1 - simpleStatistics.standardDeviation(selectedValues);
+        case "variabililty":
+          consistency = variabililty(selectedValues);
           break;
 
         case "pValue":
@@ -386,7 +395,7 @@ function updateConnections() {
 
     data.dimensions.forEach(function (dimension, i) {
       var selectedRelations = selectedDimensions.map(function (selected) {
-        return selected.relations[i].value;
+        return normalize(selected.relations[i].value, -1, 1);
       });
 
       switch (dimensionConnectionValue) {
@@ -407,16 +416,16 @@ function updateConnections() {
           consistency = extremeness(selectedRelations);
           break;
 
-        case "stdDev":
-          consistency = 1 - simpleStatistics.standardDeviation(selectedRelations);
+        case "variabililty":
+          consistency = variabililty(selectedRelations);
           break;
 
         case "pValue":
           var unselectedRelations = unselectedDimensions.map(function (unselected) {
-            return unselected.relations[i];
+            return normalize(unselected.relations[i].value, -1, 1);
           });
 
-          consistency = 1 - pValue(selectedValues, unselectedValues);
+          consistency = 1 - pValue(selectedRelations, unselectedRelations);
           break;
 
         default:
@@ -528,7 +537,7 @@ function processData(inputData) {
       dimension.categories = categories.values();
 
       dimension.values.forEach(function (value) {
-        value.normalized = 1;
+        value.normalized = 0.5;
       });
     }
     else {
@@ -571,7 +580,7 @@ function processData(inputData) {
       var r;
 
       if (d1.categorical && d2.categorical) {
-        r = 0.5;
+        r = 0;
       }
       else if (d1.categorical) {
          r = categoricalRegression(d1, d2);

@@ -18,7 +18,7 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/descriptors.csv";
 
 //var filename = "data/crohn.csv";
-var filename = "data/car90.csv";
+//var filename = "data/car90.csv";
 
 //var filename = "data/ais.csv";
 //var filename = "data/Benefits.csv";
@@ -32,7 +32,7 @@ var filename = "data/car90.csv";
 //var filename = "data/OJ.csv";
 //var filename = "data/pension.csv";
 //var filename = "data/possum.csv";
-//var filename = "data/rockArt.csv";
+var filename = "data/rockArt.csv";
 //var filename = "data/USJudgeRatings.csv";
 //var filename = "data/affect.csv";
 //var filename = "data/Hoops.csv";
@@ -48,7 +48,7 @@ var filename = "data/car90.csv";
 //var filename = "data/pbc.csv";
 //var filename = "data/HELPfull.csv";
 //var filename = "data/Caravan.csv";
-//var filename= "data/College.csv";
+//var filename = "data/College.csv";
 //var filename = "data/kielmc.csv";
 //var filename = "data/mlb1.csv";
 
@@ -92,7 +92,7 @@ class AppContainer extends React.Component {
 
       console.log(data);
 
-      var data2 = data.slice(0, 50);
+      var data2 = data.slice(0, 500);
       data2.columns = data.columns;
 
       ServerActionCreators.receiveData(data2);
