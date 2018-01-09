@@ -8,6 +8,7 @@ var ttest = require("ttest");
 var jStat = require("jStat").jStat;
 var jsRegression = require("js-regression");
 var regression = require("@smockle/regression").default;
+var chiSquaredTest = require("chi-squared-test");
 
 var d3 = require("d3");
 
@@ -111,9 +112,9 @@ function pValue(a1, a2) {
 
 function categoricalRegression(categorical, numeric) {
   // n - 1 dummy categories
-  var categories = categorical.categories.slice(0, -1);
-
-  console.log(categories.length + 1);
+  var categories = categorical.categories.slice(0, -1).map(function (category) {
+    return category.name;
+  });
 
   // Setup multiple regression
   var x = categories.map(function (category) {
@@ -130,6 +131,67 @@ function categoricalRegression(categorical, numeric) {
   var reg = regression(x, y);
 
   return Math.sqrt(reg.Rsquared);
+}
+
+function chiSquared(dimension1, dimension2) {
+  console.log(dimension1, dimension2);
+
+  // Initialize object for value counts
+  var counts = {};
+
+  dimension1.categories.forEach(function (c1) {
+    counts[c1.name] = {};
+
+    dimension2.categories.forEach(function (c2) {
+      counts[c1.name][c2.name] = 0;
+    });
+  });
+
+  // Get counts
+  dimension1.values.forEach(function (v1, i) {
+    var v2 = dimension2.values[i];
+
+    counts[v1.value][v2.value]++;
+  });
+
+  // Get expected and observed values
+  var n = dimension1.values.length;
+  var observed = [];
+  var expected = [];
+
+  dimension1.categories.forEach(function (c1) {
+    dimension2.categories.forEach(function (c2) {
+      observed.push(counts[c1.name][c2.name]);
+      expected.push(c1.count * c2.count / n);
+    });
+  });
+
+  // Compute chi squared
+  return simpleStatistics.sumSimple(observed.map(function (o, i) {
+    var e = expected[i];
+
+    return Math.pow(o - e, 2) / e;
+  }));
+}
+
+function cramersV(dimension1, dimension2) {
+  var chi2 = chiSquared(dimension1, dimension2);
+
+  var n = dimension1.values.length;
+  var k1 = dimension1.categories.length;
+  var k2 = dimension2.categories.length;
+  var k = Math.min(k1, k2);
+
+  if (k1 == 2 && k2 == 2) {
+    // Use phi
+    console.log("Phi: ", Math.sqrt(chi2 / n))
+    return Math.sqrt(chi2 / n);
+  }
+  else {
+    // Use Cramers V
+    console.log("V: ", Math.sqrt(chi2 / (n * Math.min(k1, k2) - 1)))
+    return Math.sqrt(chi2 / (n * (k - 1)));
+  }
 }
 
 function highlightItem(item, array) {
@@ -534,7 +596,14 @@ function processData(inputData) {
         return value.value;
       }));
 
-      dimension.categories = categories.values();
+      dimension.categories = categories.values().map(function (category) {
+        return {
+          name: category,
+          count: dimension.values.filter(function (value) {
+            return value.value === category;
+          }).length
+        };
+      });
 
       dimension.values.forEach(function (value) {
         value.normalized = 0.5;
@@ -580,7 +649,7 @@ function processData(inputData) {
       var r;
 
       if (d1.categorical && d2.categorical) {
-        r = 0;
+        r = cramersV(d1, d2);
       }
       else if (d1.categorical) {
          r = categoricalRegression(d1, d2);
