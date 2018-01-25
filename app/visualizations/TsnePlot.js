@@ -207,6 +207,12 @@ module.exports = function () {
             dispatcher.call("highlight", this, d);
           }).on("mouseout", function(d) {
             dispatcher.call("highlight", this, null);
+          })
+          .on("click", function(d) {
+            dispatcher.call("select", this, d);
+          })
+          .on("dblclick", function(d) {
+            d3.event.stopPropagation();
           });
 
       // Enter + update
@@ -218,12 +224,6 @@ module.exports = function () {
           .attr("data-original-title", title)
           .style("fill", fillColor)
           .style("stroke", strokeColor)
-          .on("click", function(d) {
-            dispatcher.call("select", this, d);
-          })
-          .on("dblclick", function(d) {
-            d3.event.stopPropagation();
-          })
         .transition()
           .duration(transitionDuration)
           .attr("cx", function(d) { return xScale(d.tsne[0])})

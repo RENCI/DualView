@@ -205,7 +205,7 @@ module.exports = function () {
 
       // Bind data
       var hexagon = svg.select(".hexagons").selectAll(".hexagon")
-          .data(bins);
+          .data(bins, binName);
 
       // Enter
       var hexagonEnter = hexagon.enter().append("path")
@@ -215,7 +215,11 @@ module.exports = function () {
           .attr("data-placement", "auto top")
           .attr("d", hex)
           .attr("transform", transform)
+          .style("fill", fillColor)
+          .style("stroke", strokeColor)
           .style("stroke-width", 2)
+          .style("fill-opacity", 0)
+          .style("stroke-opacity", 0)
           .on("mouseover", function(d) {
             // XXX: Change to send arrays
             d.forEach(function (d) {
@@ -235,16 +239,26 @@ module.exports = function () {
             d3.event.stopPropagation();
           });
 
-      // Enter + update
-      hexagonEnter.merge(hexagon)
-          .attr("r", r)
+      hexagonEnter.transition()
+          .duration(transitionDuration)
+          .style("fill-opacity", 1)
+          .style("stroke-opacity", 1);
+
+      // Update
+      hexagon
           .attr("data-original-title", title)
           .style("fill", fillColor)
           .style("stroke", strokeColor)
+        .transition()
+          .duration(transitionDuration)
           .attr("transform", transform);
 
       // Exit
-      hexagon.exit().remove();
+      hexagon.exit().transition()
+        .duration(transitionDuration)
+        .style("fill-opacity", 0)
+        .style("stroke-opacity", 0)
+        .remove();
 
       function transform(d) {
         return "translate(" + d.x + "," + d.y + ")";
@@ -256,6 +270,10 @@ module.exports = function () {
 
       function r(d) {
         return radiusScale(d.length);
+      }
+
+      function binName(d) {
+        return d.map(function(d) { return d.id; }).join("");
       }
     }
 
@@ -473,12 +491,16 @@ module.exports = function () {
     }
 
     function fillColor(d) {
-      return colorScale(colorRescale(0.5));
+      return d[0].connection ? colorScale(colorRescale(d3.mean(d, function(d) {
+        return d.connection.value;
+      }))) : colorScale(colorRescale(0.5));
 //      return d.connection ? colorScale(colorRescale(d.connection.value)) : colorScale(colorRescale(0.5));
     }
 
     function strokeColor(d) {
-      return strokeScale(colorRescale(0.5));
+      return d[0].connection ? strokeScale(d3.mean(d, function(d) {
+        return d.connection.consistency;
+      })) : strokeScale(0.5);
 //      return d.connection ? strokeScale(d.connection.consistency) : strokeScale(0.5);
     }
   }
