@@ -146,7 +146,7 @@ module.exports = function () {
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // Groups for layout
-      var groups = ["highlights", "progressHexagons", "hexagons", "selectRectangle"];
+      var groups = ["grid", "highlights", "progressHexagons", "hexagons", "selectRectangle"];
 
       g.selectAll("g")
           .data(groups)
@@ -167,9 +167,10 @@ module.exports = function () {
     // Draw the visualization
     updateScales();
     drawHexagons();
-    drawProgressPoints();
+    drawProgress();
 //    drawLinks();
     drawHighlights();
+    drawGrid();
 
     // Update tooltips
     $(".hexagons .hexagon").tooltip();
@@ -177,6 +178,8 @@ module.exports = function () {
     function updateScales() {
       xScale.range([0, innerWidth()]);
       yScale.range([innerHeight(), 0]);
+
+      hexbin.extent([[-margin.left, -margin.top], [width, height]]);
     }
 
     function drawHexagons() {
@@ -277,7 +280,7 @@ module.exports = function () {
       }
     }
 
-    function drawProgressPoints() {
+    function drawProgress() {
 /*
       // Bind data
       var point = svg.select(".progressPoints").selectAll(".point")
@@ -461,6 +464,20 @@ module.exports = function () {
       // Exit
       highlight.exit().remove();
 */
+    }
+
+    function drawGrid() {
+      var grid = svg.selectAll(".grid").selectAll("path")
+          .data([hexbin.mesh()]);
+
+      // Enter + update
+      grid.enter().append("path").merge(grid)
+          .attr("d", function(d) { return d; })
+          .style("fill", "none")
+          .style("stroke", "#eee");
+
+      // Exit
+      grid.exit().remove();
     }
 
     function id(d) {
