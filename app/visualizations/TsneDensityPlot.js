@@ -270,14 +270,6 @@ module.exports = function () {
       function hex(d) {
         return hexbin.hexagon(radiusScale(d.length));
       }
-
-      function r(d) {
-        return radiusScale(d.length);
-      }
-
-      function binName(d) {
-        return d.map(function(d) { return d.id; }).join("");
-      }
     }
 
     function drawProgress() {
@@ -432,38 +424,38 @@ module.exports = function () {
     }
 
     function drawHighlights() {
-/*
-      var selected = data.filter(function(d) {
+      var selected = hexbin(data.filter(function(d) {
         return d.tsne && (d.selected || d.highlight);
-      });
-
-      function radius(d) {
-        return radiusScale(radiusMetric(d)) + 10;
-      }
+      }));
 
       // Bind data
       var highlight = svg.select(".highlights").selectAll(".highlight")
-          .data(selected, id);
+          .data(selected, binName);
 
       // Enter
-      var highlightEnter = highlight.enter().append("circle")
+      var highlightEnter = highlight.enter().append("path")
           .attr("class", "highlight")
           .style("fill", "url(#radialGradient)")
           .style("pointer-events", "none")
-          .attr("cx", function(d) { return xScale(d.tsne[0])})
-          .attr("cy", function(d) { return yScale(d.tsne[1])})
-          .attr("r", radius);
+          .attr("d", hex)
+          .attr("transform", transform);
 
       // Enter + update
       highlightEnter.merge(highlight).transition()
           .duration(transitionDuration)
-          .attr("cx", function(d) { return xScale(d.tsne[0])})
-          .attr("cy", function(d) { return yScale(d.tsne[1])})
-          .attr("r", radius);
+          .attr("d", hex)
+          .attr("transform", transform);
 
       // Exit
       highlight.exit().remove();
-*/
+
+      function hex(d) {
+        return hexbin.hexagon(radiusScale(d.length) + 10);
+      }
+
+      function transform(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+      }
     }
 
     function drawGrid() {
@@ -480,8 +472,8 @@ module.exports = function () {
       grid.exit().remove();
     }
 
-    function id(d) {
-      return d.id ? d.id : d.name;
+    function binName(d) {
+      return d.map(function(d) { return d.id; }).join("");
     }
 
     function title(d) {
