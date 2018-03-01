@@ -17,8 +17,8 @@ class DimensionTsnePlotContainer extends React.Component {
 
     // Create visualization function
     this.tsnePlot = TsnePlot()
-        .on("select", this.handleSelectDimension)
-        .on("highlight", this.handleHighlightDimension);
+        .on("select", this.handleSelectDimensions)
+        .on("highlight", this.handleHighlightDimensions);
   }
 
   componentWillUpdate(props, state) {
@@ -51,12 +51,12 @@ class DimensionTsnePlotContainer extends React.Component {
         .call(this.tsnePlot);
   }
 
-  handleSelectDimension(dimension) {
-    ViewActionCreators.selectDimension(dimension);
+  handleSelectDimensions(dimensions, selected) {
+    ViewActionCreators.selectDimensions(dimensions, selected);
   }
 
-  handleHighlightDimension(dimension) {
-    ViewActionCreators.highlightDimension(dimension);
+  handleHighlightDimensions(dimensions) {
+    ViewActionCreators.highlightDimensions(dimensions);
   }
 
   render() {

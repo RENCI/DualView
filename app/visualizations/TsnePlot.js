@@ -96,10 +96,16 @@ module.exports = function () {
 
               var selected = x >= x1 && x <= x2 && y >= y1 && y <= y2;
 
+              var select = [],
+                  unselect = [];
+
               if (selected !== d.selected) {
-                // XXX: Use separate toggleSelect and select?
-                dispatcher.call("select", this, d);
+                if (selected) select.push(d);
+                else unselect.push(d);
               }
+
+              if (select.length > 0) dispatcher.call("select", this, select, true);
+              if (unselect.length > 0) dispatcher.call("select", this, unselect, false);
             });
           })
           .on("end", function() {
@@ -114,7 +120,7 @@ module.exports = function () {
             d3.event.preventDefault();
           })
           .on("dblclick", function() {
-            dispatcher.call("select", this, null);
+            dispatcher.call("select", this, null, false);
           })
           .call(drag);
 
@@ -204,12 +210,12 @@ module.exports = function () {
           .attr("cy", function(d) { return yScale(d.tsne[1])})
           .style("stroke-width", 2)
           .on("mouseover", function(d) {
-            dispatcher.call("highlight", this, d);
+            dispatcher.call("highlight", this, [d]);
           }).on("mouseout", function(d) {
             dispatcher.call("highlight", this, null);
           })
           .on("click", function(d) {
-            dispatcher.call("select", this, d);
+            dispatcher.call("select", this, [d], !d.selected);
           })
           .on("dblclick", function(d) {
             d3.event.stopPropagation();

@@ -12,8 +12,8 @@ class ObjectTsnePlotContainer extends React.Component {
 
     // Create visualization function
     this.tsnePlot = TsneDensityPlot()
-        .on("select", this.handleSelectObject)
-        .on("highlight", this.handleHighlightObject);
+        .on("select", this.handleSelectObjects)
+        .on("highlight", this.handleHighlightObjects);
   }
 
   componentWillUpdate(props, state) {
@@ -46,12 +46,12 @@ class ObjectTsnePlotContainer extends React.Component {
         .call(this.tsnePlot);
   }
 
-  handleSelectObject(object) {
-    ViewActionCreators.selectObject(object);
+  handleSelectObjects(objects, selected) {
+    ViewActionCreators.selectObjects(objects, selected);
   }
 
-  handleHighlightObject(object) {
-    ViewActionCreators.highlightObject(object);
+  handleHighlightObjects(objects) {
+    ViewActionCreators.highlightObjects(objects);
   }
 
   render() {

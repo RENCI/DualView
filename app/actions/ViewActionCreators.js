@@ -3,30 +3,32 @@ var Constants = require("../constants/Constants");
 
 module.exports = {
   // Dimension selection
-  selectDimension: function (dimension) {
+  selectDimensions: function (dimensions, selected) {
     AppDispatcher.dispatch({
-      actionType: Constants.SELECT_DIMENSION,
-      dimension: dimension
+      actionType: Constants.SELECT_DIMENSIONS,
+      dimensions: dimensions,
+      selected: selected
     });
   },
-  highlightDimension: function (dimension) {
+  highlightDimensions: function (dimensions) {
     AppDispatcher.dispatch({
-      actionType: Constants.HIGHLIGHT_DIMENSION,
-      dimension: dimension
+      actionType: Constants.HIGHLIGHT_DIMENSIONS,
+      dimensions: dimensions
     });
   },
 
   // Object selection
-  selectObject: function (object) {
+  selectObjects: function (objects, selected) {
     AppDispatcher.dispatch({
-      actionType: Constants.SELECT_OBJECT,
-      object: object
+      actionType: Constants.SELECT_OBJECTS,
+      objects: objects,
+      selected: selected
     });
   },
-  highlightObject: function (object) {
+  highlightObjects: function (objects) {
     AppDispatcher.dispatch({
-      actionType: Constants.HIGHLIGHT_OBJECT,
-      object: object
+      actionType: Constants.HIGHLIGHT_OBJECTS,
+      objects: objects
     });
   },
 

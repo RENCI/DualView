@@ -3,11 +3,11 @@ var keyMirror = require("keymirror");
 module.exports = keyMirror({
   RECEIVE_DATA: null,
 
-  SELECT_DIMENSION: null,
-  HIGHLIGHT_DIMENSION: null,
+  SELECT_DIMENSIONS: null,
+  HIGHLIGHT_DIMENSIONS: null,
 
-  SELECT_OBJECT: null,
-  HIGHLIGHT_OBJECT: null,
+  SELECT_OBJECTS: null,
+  HIGHLIGHT_OBJECTS: null,
 
   CHANGE_DIMENSION_CONTROL: null,
   CHANGE_OBJECT_CONTROL: null,

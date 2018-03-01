@@ -194,20 +194,27 @@ function cramersV(dimension1, dimension2) {
   }
 }
 
-function highlightItem(item, array) {
+function highlightItems(items, array) {
   array.forEach(function (item) {
     item.highlight = false;
   });
 
-  if (item) item.highlight = true;
+  if (items) {
+    items.forEach(function (item) {
+      item.highlight = true;
+    });
+  }
 
   updateConnections();
 }
 
-function selectItem(item, array) {
-  if (item) {
-    // Toggle selection
-    item.selected = !item.selected;
+function selectItems(items, array, selected) {
+  console.log(items, array, selected);
+
+  if (items) {
+    items.forEach(function (item) {
+      item.selected = selected;
+    });
   }
   else {
     // Clear all selections
@@ -791,23 +798,23 @@ DataStore.dispatchToken = AppDispatcher.register(function (action) {
       DataStore.emitChange();
       break;
 
-    case Constants.HIGHLIGHT_DIMENSION:
-      highlightItem(action.dimension, data.dimensions);
+    case Constants.HIGHLIGHT_DIMENSIONS:
+      highlightItems(action.dimensions, data.dimensions);
       DataStore.emitChange();
       break;
 
-    case Constants.SELECT_DIMENSION:
-      selectItem(action.dimension, data.dimensions);
+    case Constants.SELECT_DIMENSIONS:
+      selectItems(action.dimensions, data.dimensions, action.selected);
       DataStore.emitChange();
       break;
 
-    case Constants.HIGHLIGHT_OBJECT:
-      highlightItem(action.object, data.objects);
+    case Constants.HIGHLIGHT_OBJECTS:
+      highlightItems(action.objects, data.objects);
       DataStore.emitChange();
       break;
 
-    case Constants.SELECT_OBJECT:
-      selectItem(action.object, data.objects);
+    case Constants.SELECT_OBJECTS:
+      selectItems(action.objects, data.objects, action.selected);
       DataStore.emitChange();
       break;
 
