@@ -217,12 +217,11 @@ module.exports = function () {
           .data(bins, binName);
 
       // Enter
-      var hexagonEnter = hexagon.enter().append("path")
+      var hexagonEnter = hexagon.enter().append("g")
           .attr("class", "hexagon")
           .attr("data-toggle", "tooltip")
           .attr("data-container", "body")
           .attr("data-placement", "auto top")
-          .attr("d", hex)
           .attr("transform", transform)
           .style("fill", fillColor)
           .style("stroke", strokeColor)
@@ -252,7 +251,17 @@ module.exports = function () {
           })
           .on("dblclick", function(d) {
             d3.event.stopPropagation();
-          });
+          })
+
+      hexagonEnter.append("path")
+          .attr("class", "background")
+          .attr("d", hexbin.hexagon())
+          .style("visibility", "hidden")
+          .style("pointer-events", "all");
+
+      hexagonEnter.append("path")
+          .attr("class", "glyph")
+          .attr("d", hex);
 
       hexagonEnter.transition()
           .duration(transitionDuration)
