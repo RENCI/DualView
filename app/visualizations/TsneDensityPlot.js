@@ -152,7 +152,7 @@ module.exports = function () {
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // Groups for layout
-      var groups = ["grid", "highlights", "progressHexagons", "hexagons", "selectRectangle"];
+      var groups = ["grid", "highlights", "progress", "hexagons", "selectRectangle"];
 
       g.selectAll("g")
           .data(groups)
@@ -190,11 +190,9 @@ module.exports = function () {
 
     function drawHexagons() {
       // Only update these hexagons if tSNE has finished
-      var progress = data.filter(function(d) {
+      if (data.filter(function(d) {
         return d.tsneProgress;
-      }).length > 0;
-
-      if (progress) return;
+      }).length > 0) return;
 
       // Update bins
       var bins = hexbin(data.filter(function(d) {
@@ -294,37 +292,37 @@ module.exports = function () {
     }
 
     function drawProgress() {
-/*
       // Bind data
-      var point = svg.select(".progressPoints").selectAll(".point")
+      var hexagon = svg.select(".progress").selectAll(".hexagon")
           .data(data.filter(function(d) {
             return d.tsneProgress;
-          }), id);
+          }), function(d) {
+            return d.name ? d.name : d.id;
+          });
 
       // Enter
-      var pointEnter = point.enter().append("circle")
-          .attr("class", "point")
-          .attr("cx", xScale(0))
-          .attr("cy", yScale(0))
+      var hexagonEnter = hexagon.enter().append("circle")
+          .attr("class", "hexagon")
           .style("fill-opacity", 0.2)
           .style("stroke-opacity", 0.2);
 
       // Enter + update
-      pointEnter.merge(point)
-          .sort(function(a, b) {
-            return d3.descending(radiusMetric(a), radiusMetric(b));
-          })
-          .attr("r", function(d) { return radiusScale(radiusMetric(d)); })
-          .attr("cx", function(d) { return xScale(d.tsneProgress[0])})
-          .attr("cy", function(d) { return yScale(d.tsneProgress[1])})
+      hexagonEnter.merge(hexagon)
+          //.attr("path", hexbin.hexagon(radiusScale(1)))
+          //.attr("path", hexbin.hexagon(30))
+          .attr("r", radius / 2)
+          .attr("transform", transform)
           .style("fill", fillColor)
           .style("stroke", strokeColor);
 
       // Exit
-      point.exit().transition()
+      hexagon.exit().transition()
           .delay(transitionDuration)
           .remove();
-*/
+
+      function transform(d) {
+        return "translate(" + xScale(d.tsneProgress[0]) + "," + yScale(d.tsneProgress[1]) + ")";
+      }
     }
 
     function drawLinks() {
@@ -521,17 +519,25 @@ module.exports = function () {
     }
 
     function fillColor(d) {
-      return d[0].connection ? colorScale(colorRescale(d3.mean(d, function(d) {
-        return d.connection.value;
-      }))) : colorScale(colorRescale(0.5));
-//      return d.connection ? colorScale(colorRescale(d.connection.value)) : colorScale(colorRescale(0.5));
+      if (d.length) {
+        return d[0].connection ? colorScale(colorRescale(d3.mean(d, function(d) {
+          return d.connection.value;
+        }))) : colorScale(colorRescale(0.5));
+      }
+      else {
+        return d.connection ? colorScale(colorRescale(d.connection.value)) : colorScale(colorRescale(0.5));
+      }
     }
 
     function strokeColor(d) {
-      return d[0].connection ? strokeScale(d3.mean(d, function(d) {
-        return d.connection.consistency;
-      })) : strokeScale(0.5);
-//      return d.connection ? strokeScale(d.connection.consistency) : strokeScale(0.5);
+      if (d.length) {
+        return d[0].connection ? strokeScale(d3.mean(d, function(d) {
+          return d.connection.consistency;
+        })) : strokeScale(0.5);
+      }
+      else {
+        return d.connection ? strokeScale(d.connection.consistency) : strokeScale(0.5);
+      }
     }
   }
 
