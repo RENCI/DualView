@@ -89,18 +89,15 @@ class AppContainer extends React.Component {
     DataStore.addChangeListener(this.onDataChange);
 
     // Load data
-    d3.csv(filename, function(error, data) {
-      if (error) {
-        console.log(error);
-        return;
-      }
-
+    d3.csv(filename).then(function (data) {
       console.log(data);
 
       var data2 = data.slice(0, 500);
       data2.columns = data.columns;
 
       ServerActionCreators.receiveData(data2);
+    }).catch(function (error) {
+      console.log(error);
     });
   }
 
