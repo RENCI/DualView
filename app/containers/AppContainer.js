@@ -11,7 +11,7 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/mycars.csv";
 //var filename = "data/mystates.csv";
 //var filename = "data/NHS_PCT_sample04.csv";
-//var filename = "data/NHS_PCT_sample05.csv";
+var filename = "data/NHS_PCT_sample05.csv";
 //var filename = "data/NHS_practice_qof_prev_1011_cluster.csv";
 //var filename = "data/swiss.csv";
 //var filename = "data/NFL Combine 2017.csv";
@@ -20,7 +20,7 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/crohn.csv";
 //var filename = "data/car90.csv";
 
-var filename = "data/Hoops.csv";
+//var filename = "data/Hoops.csv";
 
 //var filename = "data/Cholera.csv";
 //var filename = "data/ais.csv";

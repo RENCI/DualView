@@ -209,8 +209,6 @@ function highlightItems(items, array) {
 }
 
 function selectItems(items, array, selected) {
-  console.log(items, array, selected);
-
   if (items) {
     items.forEach(function (item) {
       item.selected = selected;
@@ -613,6 +611,7 @@ function processData(inputData) {
       });
 
       dimension.values.forEach(function (value) {
+        // XXX: Add numeric value for category, probably based on frequency of this value
         value.normalized = 0.5;
       });
     }
