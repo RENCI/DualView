@@ -3,6 +3,7 @@ var ReactDOM = require("react-dom");
 var PropTypes = require("prop-types");
 var d3 = require("d3");
 var TsnePlot = require("../visualizations/TsnePlot");
+var TsneDensityPlot = require("../visualizations/TsneDensityPlot");
 var ViewActionCreators = require("../actions/ViewActionCreators");
 
 // Hack to put separator between views
@@ -16,7 +17,7 @@ class DimensionTsnePlotContainer extends React.Component {
     super();
 
     // Create visualization function
-    this.tsnePlot = TsnePlot()
+    this.tsnePlot = TsneDensityPlot()
         .on("select", this.handleSelectDimensions)
         .on("highlight", this.handleHighlightDimensions);
   }

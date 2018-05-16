@@ -133,18 +133,20 @@ module.exports = function () {
           })
           .call(drag);
 
-      // Add gradient
+      // Add gradient for highlight
+      var highlightColor = "#666";
+
       var gradient = svgEnter.append("defs").append("radialGradient")
           .attr("id", "radialGradient");
 
       gradient.append("stop")
           .attr("offset", "0%")
-          .attr("stop-color", "#666")
+          .attr("stop-color", highlightColor)
           .attr("stop-opacity", "1");
 
       gradient.append("stop")
           .attr("offset", "100%")
-          .attr("stop-color", "#666")
+          .attr("stop-color", highlightColor)
           .attr("stop-opacity", "0");
 
       // Apply margins
@@ -492,7 +494,9 @@ module.exports = function () {
     }
 
     function binName(d) {
-      return d.map(function(d) { return d.id; }).join("");
+      return d[0].id ?
+        d.map(function(d) { return d.id; }).join("") :
+        d.map(function(d) { return d.name; }).join("");
     }
 
     function title(d) {
