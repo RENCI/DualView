@@ -6,12 +6,6 @@ var TsnePlot = require("../visualizations/TsnePlot");
 var TsneDensityPlot = require("../visualizations/TsneDensityPlot");
 var ViewActionCreators = require("../actions/ViewActionCreators");
 
-// Hack to put separator between views
-var style = {
-  marginRight: -15,
-  borderRight: "1px solid #e6e6e6"
-};
-
 class DimensionTsnePlotContainer extends React.Component {
   constructor() {
     super();
@@ -61,7 +55,7 @@ class DimensionTsnePlotContainer extends React.Component {
   }
 
   render() {
-    return <div style={style}></div>
+    return <div></div>
   }
 }
 

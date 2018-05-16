@@ -40,6 +40,10 @@ module.exports = function () {
           .x(function(d) { return xScale(d.tsne[0]); })
           .y(function(d) { return yScale(d.tsne[1]); }),
 
+      // State
+      state = null,
+      oldState = null,
+
       // Start with empty selection
       svg = d3.select(),
 
@@ -154,7 +158,7 @@ module.exports = function () {
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // Groups for layout
-      var groups = ["grid", "highlights", "progress", "hexagons", "selectRectangle"];
+      var groups = ["grid", "highlights", "progress", "points", "hexagons", "selectRectangle"];
 
       g.selectAll("g")
           .data(groups)
@@ -172,13 +176,20 @@ module.exports = function () {
     svg .attr("width", width)
         .attr("height", height);
 
+    state = data.filter(function(d) {
+      return d.tsneProgress;
+    }).length > 0 ? "progress" : "end";
+
     // Draw the visualization
     updateScales();
     drawHexagons();
+    drawPoints();
     drawProgress();
 //    drawLinks();
     drawHighlights();
     drawGrid();
+
+    oldState = state;
 
     // Update tooltips
     $(".hexagons .hexagon").tooltip();
@@ -191,10 +202,12 @@ module.exports = function () {
     }
 
     function drawHexagons() {
-      // Only update these hexagons if tSNE has finished
-      if (data.filter(function(d) {
-        return d.tsneProgress;
-      }).length > 0) return;
+      if (state === "progress") {
+        return;
+      }
+      else if (state === "end" && oldState === "progress") {
+        svg.select(".hexagons").selectAll(".hexagon").remove();
+      }
 
       // Update bins
       var bins = hexbin(data.filter(function(d) {
@@ -226,8 +239,7 @@ module.exports = function () {
           .style("fill", fillColor)
           .style("stroke", strokeColor)
           .style("stroke-width", 2)
-          .style("fill-opacity", 0)
-          .style("stroke-opacity", 0)
+          .style("opacity", 0)
           .on("mouseover", function(d) {
             dispatcher.call("highlight", this, d);
           })
@@ -264,15 +276,16 @@ module.exports = function () {
           .attr("d", hex);
 
       hexagonEnter.transition()
+          .delay(transitionDuration)
           .duration(transitionDuration)
-          .style("fill-opacity", 1)
-          .style("stroke-opacity", 1);
+          .style("opacity", 1);
 
       // Update
       hexagon
           .attr("data-original-title", title)
           .style("fill", fillColor)
           .style("stroke", strokeColor)
+          .style("opacity", 1)
         .transition()
           .duration(transitionDuration)
           .attr("transform", transform);
@@ -280,8 +293,7 @@ module.exports = function () {
       // Exit
       hexagon.exit().transition()
         .duration(transitionDuration)
-        .style("fill-opacity", 0)
-        .style("stroke-opacity", 0)
+        .style("opacity", 0)
         .remove();
 
       function transform(d) {
@@ -293,9 +305,64 @@ module.exports = function () {
       }
     }
 
+    function drawPoints() {
+      if (!(state === "end" && oldState === "progress")) {
+        return;
+      }
+
+      var showConnection = data.filter(function(d) {
+        return d.connection > 0;
+      }).length > 0;
+
+      // Bind data
+      var point = svg.select(".points").selectAll(".point")
+          .data(data.filter(function(d) {
+            return d.tsne;
+          }), id);
+
+      // Enter
+      var pointEnter = point.enter().append("circle")
+          .attr("class", "point")
+          .attr("data-toggle", "tooltip")
+          .attr("data-container", "body")
+          .attr("data-placement", "auto top")
+          .attr("cx", function(d) { return xScale(d.tsne[0])})
+          .attr("cy", function(d) { return yScale(d.tsne[1])})
+          .style("stroke-width", 2)
+          .on("mouseover", function(d) {
+            dispatcher.call("highlight", this, [d]);
+          }).on("mouseout", function(d) {
+            dispatcher.call("highlight", this, null);
+          })
+          .on("click", function(d) {
+            dispatcher.call("select", this, [d], !d.selected);
+          })
+          .on("dblclick", function(d) {
+            d3.event.stopPropagation();
+          });
+
+      // Enter + update
+      pointEnter.merge(point)
+          .attr("r", radius / 2)
+//          .attr("data-original-title", title)
+          .style("fill", fillColor)
+          .style("stroke", strokeColor)
+          .style("opacity", 1)
+        .transition()
+          .duration(transitionDuration)
+          .attr("cx", function(d) { return xScale(d.tsne[0])})
+          .attr("cy", function(d) { return yScale(d.tsne[1])})
+        .transition()
+          .duration(transitionDuration)
+          .style("opacity", 0);
+
+      // Exit
+      point.exit().remove();
+    }
+
     function drawProgress() {
       // Bind data
-      var hexagon = svg.select(".progress").selectAll(".hexagon")
+      var point = svg.select(".progress").selectAll(".point")
           .data(data.filter(function(d) {
             return d.tsneProgress;
           }), function(d) {
@@ -303,13 +370,13 @@ module.exports = function () {
           });
 
       // Enter
-      var hexagonEnter = hexagon.enter().append("circle")
-          .attr("class", "hexagon")
+      var pointEnter = point.enter().append("circle")
+          .attr("class", "point")
           .style("fill-opacity", 0.2)
           .style("stroke-opacity", 0.2);
 
       // Enter + update
-      hexagonEnter.merge(hexagon)
+      pointEnter.merge(point)
           //.attr("path", hexbin.hexagon(radiusScale(1)))
           //.attr("path", hexbin.hexagon(30))
           .attr("r", radius / 2)
@@ -318,7 +385,7 @@ module.exports = function () {
           .style("stroke", strokeColor);
 
       // Exit
-      hexagon.exit().transition()
+      point.exit().transition()
           .delay(transitionDuration)
           .remove();
 
@@ -445,6 +512,16 @@ module.exports = function () {
     }
 
     function drawHighlights() {
+      if (state === "progress") {
+        return;
+      }
+
+      var endProgress = state === "end" && oldState === "progress";
+
+      if (endProgress) {
+        svg.select(".highlights").selectAll(".highlight").remove();
+      }
+
       var selected = hexbin(data.filter(function(d) {
         return d.tsne && (d.selected || d.highlight);
       }));
@@ -456,16 +533,15 @@ module.exports = function () {
       // Enter
       var highlightEnter = highlight.enter().append("path")
           .attr("class", "highlight")
+          .attr("d", hex)
+          .attr("transform", transform)
           .style("fill", "url(#radialGradient)")
           .style("pointer-events", "none")
-          .attr("d", hex)
-          .attr("transform", transform);
-
-      // Enter + update
-      highlightEnter.merge(highlight).transition()
+          .style("opacity", endProgress ? 0 : 1)
+        .transition()
+          .delay(transitionDuration)
           .duration(transitionDuration)
-          .attr("d", hex)
-          .attr("transform", transform);
+          .style("opacity", 1);
 
       // Exit
       highlight.exit().remove();
@@ -493,6 +569,10 @@ module.exports = function () {
       grid.exit().remove();
     }
 
+    function id(d) {
+      return d.id ? d.id : d.name;
+    }
+
     function binName(d) {
       return d[0].id ?
         d.map(function(d) { return d.id; }).join("") :
@@ -500,17 +580,20 @@ module.exports = function () {
     }
 
     function title(d) {
-      var nameKey = d[0].relations ? "name" : "id";
+      if (d.length) {
+        var nameKey = d[0].relations ? "name" : "id";
 
-      var s = "";
+        var s = "";
 
-      d.forEach(function(d, i) {
-        if (i !== 0) s += ", ";
-        s += d[nameKey];
-      });
+        d.forEach(function(d, i) {
+          if (i !== 0) s += ", ";
+          s += d[nameKey];
+        });
 
-      return s;
-
+        return s;
+      }
+      else {
+        return id(d);
 /*
       var s = d.relations ? d.name : d.id;
 
@@ -520,6 +603,7 @@ module.exports = function () {
 
       return s;
 */
+      }
     }
 
     function fillColor(d) {
