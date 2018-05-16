@@ -602,17 +602,32 @@ function processData(inputData) {
       }));
 
       dimension.categories = categories.values().map(function (category) {
+        var count = dimension.values.filter(function (value) {
+          return value.value === category;
+        }).length;
+
         return {
           name: category,
-          count: dimension.values.filter(function (value) {
-            return value.value === category;
-          }).length
+          count: count,
+          proportion: count / dimension.values.length
         };
       });
 
+      var propExtent = d3.extent(dimension.categories, function (category) {
+        return category.proportion;
+      });
+
+      var propScale = d3.scaleLinear()
+          .domain(propExtent)
+          .range([1, 0]);
+
       dimension.values.forEach(function (value) {
-        // XXX: Add numeric value for category, probably based on frequency of this value
-        value.normalized = 0.5;
+        // Use 1 - proportion to highight infrequent categories
+        var i = dimension.categories.map(function (category) {
+          return category.name;
+        }).indexOf(value.value);
+
+        value.normalized = propScale(dimension.categories[i].proportion);
       });
     }
     else {
