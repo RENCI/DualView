@@ -112,7 +112,7 @@ function pValue(a1, a2) {
 
 function categoricalRegression(categorical, numeric) {
   // XXX: What should be returned here?
-  if (categorical.categories.length === 1) return 0.5;
+  if (categorical.categories.length === 1) return 0.0;
 
   // n - 1 dummy categories
   var categories = categorical.categories.slice(0, -1).map(function (category) {
@@ -178,7 +178,7 @@ function chiSquared(dimension1, dimension2) {
 function cramersV(dimension1, dimension2) {
   // XXX: What should be returned here?
   if (dimension1.categories.length === 1 ||
-      dimension2.categories.length === 1) return 0.5;
+      dimension2.categories.length === 1) return 0.0;
 
   var chi2 = chiSquared(dimension1, dimension2);
 
@@ -686,6 +686,8 @@ function processData(inputData) {
           d1.values.map(function (value) { return value.value; }),
           d2.values.map(function (value) { return value.value; })
         );
+
+        if (isNaN(r)) r = 0.0;
       }
 
       d1.relations.push({
