@@ -10,9 +10,8 @@ var MainSection = require("../components/MainSection");
 
 //var filename = "data/mycars.csv";
 //var filename = "data/mystates.csv";
-var filename = "data/NHS_PCT_sample04.csv";
+//var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/NHS_PCT_sample05.csv";
-//var filename = "data/NHS_practice_qof_prev_1011_cluster.csv";
 //var filename = "data/swiss.csv";
 //var filename = "data/NFL Combine 2017.csv";
 //var filename = "data/descriptors.csv";
@@ -20,7 +19,7 @@ var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/crohn.csv";
 //var filename = "data/car90.csv";
 
-//var filename = "data/Hoops.csv";
+var filename = "data/Hoops.csv";
 
 //var filename = "data/Cholera.csv";
 //var filename = "data/ais.csv";
@@ -49,13 +48,16 @@ var filename = "data/NHS_PCT_sample04.csv";
 //var filename = "data/std.csv";
 //var filename = "data/toxicity.csv";
 //var filename = "data/Caschool.csv";
-//var filename = "data/Bankingcrises.csv";
+//var filename = "data/bankingCrises.csv";
 //var filename = "data/pbc.csv";
 //var filename = "data/HELPfull.csv";
 //var filename = "data/Caravan.csv";
 //var filename = "data/College.csv";
 //var filename = "data/kielmc.csv";
 //var filename = "data/mlb1.csv";
+//var filename = "data/plantTraits.csv";
+//var filename = "data/midwest.csv";
+//var filename = "data/NCHS_-_Drug_Poisoning_Mortality_by_State__United_States.csv";
 
 var divStyle = {
   height: "100%",
@@ -92,7 +94,9 @@ class AppContainer extends React.Component {
     d3.csv(filename).then(function (data) {
       console.log(data);
 
-      var data2 = data.slice(0, 500);
+      var data2 = data.slice();
+      d3.shuffle(data2);
+      data2 = data2.slice(0, 500);
       data2.columns = data.columns;
 
       ServerActionCreators.receiveData(data2);
