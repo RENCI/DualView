@@ -19,13 +19,13 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/crohn.csv";
 //var filename = "data/car90.csv";
 
-var filename = "data/Hoops.csv";
+//var filename = "data/Hoops.csv";
 
 //var filename = "data/Cholera.csv";
 //var filename = "data/ais.csv";
 //var filename = "data/codling.csv";
 //var filename = "data/hurricNamed.csv";
-//var filename = "data/Benefits.csv";
+var filename = "data/Benefits.csv";
 //var filename = "data/Caterpillars.csv";
 //var filename = "data/cps3.csv";
 //var filename = "data/Crime.csv";

@@ -17,6 +17,7 @@ module.exports = function () {
 
       // Parameters
       radius = 10,
+      pointRadius = radius / 2,
       transitionDuration = 2000,
 
       // Scales
@@ -343,7 +344,7 @@ module.exports = function () {
 
       // Enter + update
       pointEnter.merge(point)
-          .attr("r", radius / 2)
+          .attr("r", pointRadius)
 //          .attr("data-original-title", title)
           .style("fill", fillColor)
           .style("stroke", strokeColor)
@@ -379,7 +380,7 @@ module.exports = function () {
       pointEnter.merge(point)
           //.attr("path", hexbin.hexagon(radiusScale(1)))
           //.attr("path", hexbin.hexagon(30))
-          .attr("r", radius / 2)
+          .attr("r", pointRadius)
           .attr("transform", transform)
           .style("fill", fillColor)
           .style("stroke", strokeColor);

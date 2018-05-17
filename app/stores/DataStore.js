@@ -111,6 +111,9 @@ function pValue(a1, a2) {
 }
 
 function categoricalRegression(categorical, numeric) {
+  // XXX: What should be returned here?
+  if (categorical.categories.length === 1) return 0.5;
+
   // n - 1 dummy categories
   var categories = categorical.categories.slice(0, -1).map(function (category) {
     return category.name;
@@ -134,8 +137,6 @@ function categoricalRegression(categorical, numeric) {
 }
 
 function chiSquared(dimension1, dimension2) {
-  console.log(dimension1, dimension2);
-
   // Initialize object for value counts
   var counts = {};
 
@@ -175,6 +176,10 @@ function chiSquared(dimension1, dimension2) {
 }
 
 function cramersV(dimension1, dimension2) {
+  // XXX: What should be returned here?
+  if (dimension1.categories.length === 1 ||
+      dimension2.categories.length === 1) return 0.5;
+
   var chi2 = chiSquared(dimension1, dimension2);
 
   var n = dimension1.values.length;
@@ -184,12 +189,12 @@ function cramersV(dimension1, dimension2) {
 
   if (k1 == 2 && k2 == 2) {
     // Use phi
-    console.log("Phi: ", Math.sqrt(chi2 / n))
+//    console.log("Phi: ", Math.sqrt(chi2 / n));
     return Math.sqrt(chi2 / n);
   }
   else {
     // Use Cramers V
-    console.log("V: ", Math.sqrt(chi2 / (n * Math.min(k1, k2) - 1)))
+//    console.log("V: ", Math.sqrt(chi2 / (n * (k - 1))));
     return Math.sqrt(chi2 / (n * (k - 1)));
   }
 }
@@ -611,23 +616,21 @@ function processData(inputData) {
           count: count,
           proportion: count / dimension.values.length
         };
+      }).sort(function (a, b) {
+        return d3.descending(a.count, b.count);
       });
 
-      var propExtent = d3.extent(dimension.categories, function (category) {
-        return category.proportion;
-      });
-
-      var propScale = d3.scaleLinear()
-          .domain(propExtent)
-          .range([1, 0]);
+      var categoryScale = d3.scaleLinear()
+          .domain([0, dimension.categories.length - 1])
+          .range([0, 1]);
 
       dimension.values.forEach(function (value) {
-        // Use 1 - proportion to highight infrequent categories
+        // Use sort order for normalized value
         var i = dimension.categories.map(function (category) {
           return category.name;
         }).indexOf(value.value);
 
-        value.normalized = propScale(dimension.categories[i].proportion);
+        value.normalized = categoryScale(i);
       });
     }
     else {
