@@ -14,6 +14,10 @@ class ObjectTsnePlotContainer extends React.Component {
     this.tsnePlot = TsneDensityPlot()
         .on("select", this.handleSelectObjects)
         .on("highlight", this.handleHighlightObjects);
+
+    // Need to bind this to callback functions here
+    this.handleSelectObjects = this.handleSelectObjects.bind(this);
+    this.handleHighlightObjects = this.handleHighlightObjects.bind(this);
   }
 
   componentWillUpdate(props, state) {
@@ -41,7 +45,7 @@ class ObjectTsnePlotContainer extends React.Component {
         .width(props.width)
         .height(props.width);
 
-    d3.select(ReactDOM.findDOMNode(this))
+    d3.select(this.div)
         .datum(props.data)
         .call(this.tsnePlot);
   }
@@ -55,7 +59,7 @@ class ObjectTsnePlotContainer extends React.Component {
   }
 
   render() {
-    return <div></div>
+    return <div ref={div => this.div = div}></div>
   }
 }
 

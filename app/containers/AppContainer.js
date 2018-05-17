@@ -85,6 +85,7 @@ class AppContainer extends React.Component {
 
     // Need to bind this to callback functions here
     this.onDataChange = this.onDataChange.bind(this);
+    this.onResize = this.onResize.bind(this);
   }
 
   componentDidMount() {
@@ -113,12 +114,17 @@ class AppContainer extends React.Component {
     this.setState(getStateFromStore());
   }
 
+  onResize() {
+    this.forceUpdate();
+  }
+
   render() {
     var hasData = this.state.data !== null;
 
     return (
       <div className="container-fluid" style={divStyle}>
-        <ResizeContainer />
+        <ResizeContainer
+          onResize={this.onResize} />
         <HeaderSection />
         {hasData ?
           <div style={mainStyle}>

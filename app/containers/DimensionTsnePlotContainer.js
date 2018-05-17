@@ -41,7 +41,7 @@ class DimensionTsnePlotContainer extends React.Component {
         .width(props.width)
         .height(props.width);
 
-    d3.select(ReactDOM.findDOMNode(this))
+    d3.select(this.div)
         .datum(props.data)
         .call(this.tsnePlot);
   }
@@ -55,7 +55,7 @@ class DimensionTsnePlotContainer extends React.Component {
   }
 
   render() {
-    return <div></div>
+    return <div ref={div => this.div = div}></div>
   }
 }
 
