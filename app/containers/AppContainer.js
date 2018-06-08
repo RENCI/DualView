@@ -8,6 +8,16 @@ var ResizeContainer = require("./ResizeContainer");
 var HeaderSection = require("../components/HeaderSection");
 var MainSection = require("../components/MainSection");
 
+//var filename = "data/hcc-survival/hcc-data.csv";
+//var filename = "data/Cervical cancer/risk_factors_cervical_cancer.csv";
+//var filename = "data/auto/imports-85.csv";
+//var filename = "data/Mturk User-Perceived Clusters over Images/DataSet_Spec_1/data_feature.csv";
+//var filename = "data/dermatology/dermatology.csv";
+//var filename = "data/breast-cancer-wisconsin/wdbc.data";
+//var filename = "data/Quality Assessment - Digital Colposcopy/green.csv";
+//var filename = "data/musk/clean1_nonames.csv";
+//var filename = "data/spect/SPECTF.train.csv";
+
 //var filename = "data/mycars.csv";
 //var filename = "data/mystates.csv";
 //var filename = "data/NHS_PCT_sample04.csv";
@@ -17,7 +27,7 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/descriptors.csv";
 
 //var filename = "data/crohn.csv";
-//var filename = "data/car90.csv";
+var filename = "data/car90.csv";
 
 //var filename = "data/Hoops.csv";
 
@@ -32,7 +42,7 @@ var MainSection = require("../components/MainSection");
 //var filename = "data/HELPrct.csv";
 //var filename = "data/jobs.csv";
 //var filename = "data/loti.csv";
-var filename = "data/nuclear.csv";
+//var filename = "data/nuclear.csv";
 //var filename = "data/OJ.csv";
 //var filename = "data/pension.csv";
 //var filename = "data/possum.csv";
