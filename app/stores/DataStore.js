@@ -720,6 +720,8 @@ function processData(inputData) {
 
       var o2 = data.objects[j];
 
+      // XXX: Split up categorical variables by value, or look at Gower similarity
+
       var d = cosineSimilarity(
         o1.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); }),
         o2.values.map(function (value) { return normalize(value.value, value.dimension.min, value.dimension.max); })
